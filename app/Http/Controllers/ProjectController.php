@@ -41,4 +41,46 @@ class ProjectController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function update(Request $request, Project $project): JsonResponse
+    {
+        try {
+            abort_if($project->user_id !== $request->user()->id, 403);
+
+            $request->validate([
+                'title' => ['required', 'string', 'max:255'],
+            ]);
+
+            $base  = trim($request->title);
+            $title = $base;
+            $i     = 1;
+
+            while (
+                Project::where('user_id', $request->user()->id)
+                       ->where('title', $title)
+                       ->where('id', '!=', $project->id)
+                       ->exists()
+            ) {
+                $title = "{$base} ({$i})";
+                $i++;
+            }
+
+            $project->update(['title' => $title]);
+
+            return response()->json(['title' => $project->fresh()->title]);
+        } catch (Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function destroy(Request $request, Project $project): JsonResponse
+    {
+        try {
+            abort_if($project->user_id !== $request->user()->id, 403);
+            $project->delete();
+            return response()->json(['ok' => true]);
+        } catch (Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }
