@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\ProjectVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class Project extends Model
 {
@@ -14,24 +12,9 @@ class Project extends Model
         'user_id',
         'title',
         'slug',
-        'visibility',
+        'type',
+        'cover_path',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'visibility' => ProjectVisibility::class,
-        ];
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (self $project): void {
-            if (empty($project->slug)) {
-                $project->slug = Str::slug($project->title);
-            }
-        });
-    }
 
     public function user(): BelongsTo
     {

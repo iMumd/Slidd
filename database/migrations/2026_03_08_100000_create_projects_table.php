@@ -13,10 +13,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->enum('visibility', ['public', 'private'])->default('private');
+            $table->enum('type', ['slides', 'galaxy'])->default('slides');
+            $table->string('cover_path')->nullable();
             $table->timestamps();
-
-            $table->index(['user_id', 'visibility']);
         });
     }
 
