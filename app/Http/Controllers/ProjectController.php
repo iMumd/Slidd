@@ -10,6 +10,13 @@ use Throwable;
 
 class ProjectController extends Controller
 {
+    public function show(Request $request, string $slug)
+    {
+        $project = Project::where('slug', $slug)->firstOrFail();
+        abort_if($project->user_id !== $request->user()->id, 403);
+        return view('editor', compact('project'));
+    }
+
     public function store(Request $request): JsonResponse
     {
         try {

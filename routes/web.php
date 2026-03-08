@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
-    Route::get('/editor/{slug}', fn(string $slug) => 'Editor placeholder for: ' . e($slug))->name('editor.show');
+    Route::get('/editor/{slug}', [ProjectController::class, 'show'])->name('editor.show');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
