@@ -67,7 +67,7 @@
 <body class="h-full antialiased"
       style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;"
       x-data="editor()"
-      @keydown.escape.window="shareOpen = false"
+      @keydown.escape.window="shareOpen = false; isShortcutsModalOpen = false"
       @mouseup.window="checkSelection()"
       @keyup.window="checkSelection()">
 
@@ -82,6 +82,17 @@
         </div>
 
         <div class="flex items-center gap-2">
+
+            {{-- Shortcuts guide --}}
+            <button @click="isShortcutsModalOpen = true"
+                    title="Keyboard shortcuts"
+                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-gray-400 hover:text-slate-700 hover:bg-gray-100 transition-colors group">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                    <rect x="2" y="6" width="20" height="13" rx="2.5" stroke="currentColor" stroke-width="1.75" fill="none"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M10 14h.01M14 14h4"/>
+                </svg>
+                <span class="text-xs font-medium">Shortcuts</span>
+            </button>
 
             {{-- Save --}}
             <button @click="saveProject()"
@@ -345,8 +356,9 @@
                      class="absolute top-full left-0 mt-1 w-36 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg py-1 z-50 flex flex-col"
                      style="display:none;">
                     <template x-for="font in ['Arial', 'Cairo', 'Tajawal', 'Lotus', 'JetBrains Mono']" :key="font">
-                        <button @mouseenter="previewFont(font)"
-                                @mousedown.prevent="selectFont(font)"
+                        <button @mouseenter="_previewConfirmed = false; previewFont(font)"
+                                @mouseleave="if (!_previewConfirmed) document.execCommand('undo')"
+                                @mousedown.prevent="_previewConfirmed = true; selectFont(font)"
                                 :style="`font-family: ${font}`"
                                 class="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors text-gray-700"
                                 x-text="font">
@@ -369,8 +381,9 @@
                      class="absolute top-full left-0 mt-1 w-24 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg py-1 z-50 flex flex-col max-h-56 overflow-y-auto"
                      style="display:none;">
                     <template x-for="size in ['8px','10px','12px','14px','16px','18px','20px','24px','30px','36px','48px','64px']" :key="size">
-                        <button @mouseenter="previewFontSize(size)"
-                                @mousedown.prevent="selectFontSize(size)"
+                        <button @mouseenter="_previewConfirmed = false; previewFontSize(size)"
+                                @mouseleave="if (!_previewConfirmed) document.execCommand('undo')"
+                                @mousedown.prevent="_previewConfirmed = true; selectFontSize(size)"
                                 :class="currentFontSize === size ? 'bg-gray-100 font-semibold' : ''"
                                 class="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors text-gray-700"
                                 x-text="size">
@@ -509,6 +522,149 @@
         </div>
     </div>
 
+    {{-- Keyboard Shortcuts Modal --}}
+    <div x-show="isShortcutsModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+         style="display:none;">
+
+        {{-- Backdrop --}}
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+             @click="isShortcutsModalOpen = false"></div>
+
+        {{-- Panel --}}
+        <div x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+             class="relative w-full max-w-md bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-2xl shadow-2xl overflow-hidden">
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100">
+                        <svg class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                            <rect x="2" y="6" width="20" height="13" rx="2.5" stroke="currentColor" stroke-width="1.75" fill="none"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M10 14h.01M14 14h4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">Keyboard Shortcuts</p>
+                        <p class="text-xs text-gray-400">Speed up your workflow</p>
+                    </div>
+                </div>
+                <button @click="isShortcutsModalOpen = false"
+                        class="flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-slate-900 hover:bg-gray-100 transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Shortcut rows --}}
+            <div class="px-6 py-4 space-y-1">
+
+                {{-- Section: Formatting --}}
+                <p class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase mb-3">Formatting</p>
+
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Bold</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">B</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Italic</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">I</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Underline</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">U</kbd>
+                    </div>
+                </div>
+
+                {{-- Section: Alignment --}}
+                <p class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase pt-4 mb-3">Alignment</p>
+
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Left Align</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⇧</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">L</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Center Align</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⇧</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">E</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Right Align</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⇧</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">J</kbd>
+                    </div>
+                </div>
+
+                {{-- Section: Insert & Size --}}
+                <p class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase pt-4 mb-3">Insert & Size</p>
+
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Insert Divider</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⇧</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">H</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Increase Font Size</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⇧</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">&gt;</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between py-2.5">
+                    <span class="text-sm text-slate-700">Decrease Font Size</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⇧</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">&lt;</kbd>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-6 py-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between">
+                <span class="text-xs text-gray-400">⌘ = Ctrl on Windows</span>
+                <button @click="isShortcutsModalOpen = false"
+                        class="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <div x-show="showToast"
          x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
          x-transition:leave="transition ease-in duration-150"  x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-1"
@@ -545,10 +701,24 @@ function editor() {
         currentFontSize     : '16px',
         isSaving            : false,
         isHighlightMenuOpen : false,
-        isTextColorMenuOpen : false,
+        isTextColorMenuOpen   : false,
+        isShortcutsModalOpen  : false,
+        _previewConfirmed     : false,
         customTextColor     : '#0f172a',
         presetTextColors    : ['#0f172a','#64748b','#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7','#ec4899'],
 
+
+        init() {
+            this.blocks.forEach(block => {
+                if (block.type === 'code' && block.content) {
+                    block.highlightedContent = hljs.highlightAuto(block.content).value;
+                    block.detectedLang       = hljs.highlightAuto(block.content).language || '';
+                }
+            });
+            // Register shortcut listener in capture phase so we intercept
+            // before the browser handles conflicting built-in shortcuts.
+            document.addEventListener('keydown', (e) => this.handleShortcuts(e), true);
+        },
 
         async saveProject() {
             if (this.isSaving) return;
@@ -650,6 +820,72 @@ function editor() {
             while (para && para.parentElement !== ce) para = para.parentElement;
             const target = (para && para !== ce) ? para : ce;
             target.setAttribute('dir', dir);
+        },
+
+        handleShortcuts(e) {
+            const mod = e.ctrlKey || e.metaKey;
+            if (!mod || !e.shiftKey) return;
+
+            // Only act when focus is inside a text block
+            const ab = document.activeElement?.closest('[contenteditable]')
+                    ?? window.getSelection()?.anchorNode?.parentElement?.closest('[contenteditable]');
+            if (!ab) return;
+
+            const sizes = [8,10,12,14,16,18,20,24,30,36,48,64];
+
+            const stepSize = (delta) => {
+                const sel  = window.getSelection();
+                if (!sel || !sel.rangeCount) return;
+                let node = sel.anchorNode;
+                if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+                const cur = parseInt(getComputedStyle(node).fontSize) || 16;
+                // find nearest size index
+                const idx  = sizes.reduce((best, s, i) =>
+                    Math.abs(s - cur) < Math.abs(sizes[best] - cur) ? i : best, 0);
+                const size = sizes[Math.min(Math.max(idx + delta, 0), sizes.length - 1)] + 'px';
+                document.execCommand('fontSize', false, '7');
+                ab.querySelectorAll('font[size="7"]').forEach(f => {
+                    f.style.fontSize = size;
+                    f.removeAttribute('size');
+                });
+                this.currentFontSize = size;
+            };
+
+            // e.code is keyboard-layout-independent ('KeyH', 'Period', etc.)
+            switch (e.code) {
+                case 'KeyH':
+                    e.preventDefault();
+                    document.execCommand('insertHTML', false,
+                        '<hr class="border-t-2 border-slate-200 my-6 mx-auto w-full" /><div><br></div>');
+                    break;
+                case 'KeyE':
+                    e.preventDefault();
+                    document.execCommand('justifyCenter');
+                    break;
+                case 'KeyL':
+                    e.preventDefault();
+                    document.execCommand('justifyLeft');
+                    break;
+                case 'KeyJ':
+                    // Ctrl+Shift+R = hard-reload in Chrome (cannot be prevented).
+                    // Using J (justify right) instead — safe across all browsers.
+                    e.preventDefault();
+                    document.execCommand('justifyRight');
+                    break;
+                case 'Period':   // Shift+Period = '>'
+                    e.preventDefault();
+                    stepSize(1);
+                    break;
+                case 'Comma':    // Shift+Comma  = '<'
+                    e.preventDefault();
+                    stepSize(-1);
+                    break;
+            }
+        },
+
+        insertDivider() {
+            document.execCommand('insertHTML', false,
+                '<hr class="border-t-2 border-slate-200 my-6 mx-auto w-full" /><div><br></div>');
         },
 
         applyTextColor(color) {
@@ -762,9 +998,13 @@ function editor() {
 
         previewFontSize(size) {
             document.execCommand('fontSize', false, '7');
-            document.querySelectorAll('font[size="7"]').forEach(font => {
-                font.style.fontSize = size;
-            });
+            const activeBlock = window.getSelection()?.anchorNode?.parentElement?.closest('[contenteditable]');
+            if (activeBlock) {
+                activeBlock.querySelectorAll('font[size="7"]').forEach(font => {
+                    font.style.fontSize = size;
+                    font.removeAttribute('size');
+                });
+            }
         },
 
         selectFontSize(size) {
