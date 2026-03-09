@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\SlideType;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,20 @@ class ProjectController extends Controller
     {
         $project = Project::where('slug', $slug)->firstOrFail();
         abort_if($project->user_id !== $request->user()->id, 403);
-        return view('editor', compact('project'));
+
+        $slide       = $project->slides()->where('order_index', 0)->first();
+        $savedBlocks = $slide
+            ? $slide->blocks()->orderBy('order_index')->get()->map(fn($b) => [
+                'id'               => $b->id,
+                'type'             => $b->type,
+                'content'          => $b->type === 'code' ? ($b->content['code'] ?? '') : ($b->content['html'] ?? ''),
+                'detectedLang'     => $b->content['lang'] ?? '',
+                'highlightedContent' => '',
+                'isEditing'        => false,
+            ])->values()->all()
+            : [];
+
+        return view('editor', compact('project', 'savedBlocks'));
     }
 
     public function store(Request $request): JsonResponse
@@ -75,6 +89,47 @@ class ProjectController extends Controller
             $project->update(['title' => $title]);
 
             return response()->json(['title' => $project->fresh()->title]);
+        } catch (Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function save(Request $request, Project $project): JsonResponse
+    {
+        try {
+            abort_if($project->user_id !== $request->user()->id, 403);
+
+            $request->validate([
+                'blocks'         => ['present', 'array'],
+                'blocks.*.type'  => ['required', 'string'],
+            ]);
+
+            // Get or create the first slide for this project
+            $slide = $project->slides()->firstOrCreate(
+                ['order_index' => 0],
+                ['title' => 'Slide 1', 'type' => SlideType::SolidText, 'order_index' => 0]
+            );
+
+            // Replace all blocks
+            $slide->blocks()->delete();
+
+            foreach ($request->blocks as $index => $raw) {
+                $type    = $raw['type'];
+                $content = match ($type) {
+                    'code'  => ['code' => $raw['content'] ?? '', 'lang' => $raw['detectedLang'] ?? ''],
+                    default => ['html' => $raw['content'] ?? ''],
+                };
+
+                $slide->blocks()->create([
+                    'type'        => $type,
+                    'content'     => $content,
+                    'order_index' => $index,
+                    'position'    => ['x' => 0, 'y' => 0],
+                    'dimensions'  => ['w' => 0, 'h' => 0],
+                ]);
+            }
+
+            return response()->json(['ok' => true]);
         } catch (Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

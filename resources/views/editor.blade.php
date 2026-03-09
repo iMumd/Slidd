@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $project->title }} — Slidd</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -50,7 +51,6 @@
             pointer-events  : none;
         }
 
-        /* ── Per-paragraph direction — browser inserts <div> on Enter ───────── */
         .txt-block > div,
         .txt-block > p {
             margin     : 0;
@@ -61,6 +61,7 @@
         .txt-block ol { list-style-type: decimal; list-style-position: inside; margin-bottom: 0.5rem; }
         .txt-block li { margin-bottom: 0.2rem; }
         .txt-block li::marker { color: inherit; font-family: inherit; }
+
     </style>
 </head>
 <body class="h-full antialiased"
@@ -80,27 +81,17 @@
             <span class="text-sm font-semibold text-slate-900 truncate max-w-xs">{{ $project->title }}</span>
         </div>
 
-        <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            <button @click="view = 'editor'"
-                    :class="view === 'editor' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
-                </svg>
-                Editor
-            </button>
-            <button @click="view = 'preview'"
-                    :class="view === 'preview' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.574-3.007-9.964-7.178z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                Preview
-            </button>
-        </div>
-
         <div class="flex items-center gap-2">
+
+            {{-- Save --}}
+            <button @click="saveProject()"
+                    :disabled="isSaving"
+                    x-text="isSaving ? 'Saving...' : 'Save'"
+                    class="flex items-center gap-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg transition-colors">
+                Save
+            </button>
+
+            {{-- Share --}}
             <div class="relative">
                 <button @click="shareOpen = !shareOpen"
                         class="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
@@ -130,12 +121,44 @@
                 </div>
             </div>
 
-            <button class="flex items-center gap-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-lg transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-                </svg>
-                Export .slidd
-            </button>
+            {{-- Export dropdown --}}
+            <div class="relative" x-data="{ exportOpen: false }" @click.away="exportOpen = false">
+                <button @click="exportOpen = !exportOpen"
+                        class="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                    </svg>
+                    Export
+                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="exportOpen"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute right-0 top-full mt-1.5 w-44 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-50"
+                     style="display:none;">
+                    <button @click="exportOpen = false"
+                            class="w-full text-left flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                        </svg>
+                        Export as .slidd
+                    </button>
+                    <button @click="exportOpen = false"
+                            class="w-full text-left flex items-center gap-2.5 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                        </svg>
+                        Export as PDF
+                    </button>
+                </div>
+            </div>
+
         </div>
     </header>
 
@@ -510,8 +533,8 @@ function editor() {
         toastMsg    : '',
         _timer      : null,
 
-        blocks  : [{ id: 1, type: 'text', content: '' }],
-        _nextId : 2,
+        blocks  : {!! count($savedBlocks) ? \Illuminate\Support\Js::from($savedBlocks) : '[{"id":1,"type":"text","content":""}]' !!},
+        _nextId : {{ count($savedBlocks) ? collect($savedBlocks)->max('id') + 1 : 2 }},
 
         showToolbar         : false,
         toolbarX            : 0,
@@ -520,10 +543,36 @@ function editor() {
         currentFontName     : 'Arial',
         isFontSizeMenuOpen  : false,
         currentFontSize     : '16px',
+        isSaving            : false,
         isHighlightMenuOpen : false,
         isTextColorMenuOpen : false,
         customTextColor     : '#0f172a',
         presetTextColors    : ['#0f172a','#64748b','#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7','#ec4899'],
+
+
+        async saveProject() {
+            if (this.isSaving) return;
+            this.isSaving = true;
+            try {
+                const res = await fetch('/editor/{{ $project->slug }}/save', {
+                    method  : 'POST',
+                    headers : {
+                        'Content-Type' : 'application/json',
+                        'Accept'       : 'application/json',
+                        'X-CSRF-TOKEN' : document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({ blocks: this.blocks }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message ?? data.error ?? `HTTP ${res.status}`);
+                this.toast('Project saved!');
+            } catch (err) {
+                this.toast('Save failed: ' + err.message);
+                console.error('[saveProject]', err);
+            } finally {
+                this.isSaving = false;
+            }
+        },
 
         addTextBlock() {
             this.blocks.push({ id: this._nextId++, type: 'text', content: '' });
@@ -666,6 +715,12 @@ function editor() {
         checkSelection() {
             const sel = window.getSelection();
             if (!sel || sel.toString().trim().length === 0) {
+                this.showToolbar = false;
+                return;
+            }
+            const anchor = sel.anchorNode;
+            const node   = anchor?.nodeType === Node.TEXT_NODE ? anchor.parentElement : anchor;
+            if (!node || !node.closest('.txt-block')) {
                 this.showToolbar = false;
                 return;
             }
