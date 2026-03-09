@@ -17,6 +17,14 @@
 
         openDropdown: null,
 
+        get greeting() {
+            const h = new Date().getHours();
+            if (h >= 5  && h < 12) return 'Good morning';
+            if (h >= 12 && h < 17) return 'Good afternoon';
+            if (h >= 17 && h < 21) return 'Good evening';
+            return 'Good night';
+        },
+
         showToast: false,
         toastLoading: false,
         toastError: false,
@@ -141,7 +149,7 @@
 
     <div class="flex items-start justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900">Good morning, {{ Auth::user()->name }}.</h1>
+            <h1 class="text-2xl font-bold text-slate-900" x-text="greeting + ', {{ Auth::user()->name }}.'"></h1>
             <p class="text-sm text-gray-400 mt-1">Here's what you've been working on.</p>
         </div>
         <button
