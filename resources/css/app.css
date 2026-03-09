@@ -1,3 +1,52 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Font faces ── */
+@font-face {
+    font-family : 'JetBrains Mono';
+    src         : url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+    font-weight : normal;
+    font-style  : normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family : 'Cairo';
+    src         : url('/fonts/Cairo-Regular.ttf') format('truetype');
+    font-weight : normal;
+    font-style  : normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family : 'Tajawal';
+    src         : url('/fonts/Tajawal-Regular.ttf') format('truetype');
+    font-weight : normal;
+    font-style  : normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family : 'Lotus';
+    src         : url('/fonts/Lotus.otf') format('opentype');
+    font-weight : normal;
+    font-style  : normal;
+    font-display: swap;
+}
+
+/* ── Custom font utilities ── */
+@layer utilities {
+    .font-jetbrains {
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    }
+    .font-cairo {
+        font-family: 'Cairo', sans-serif !important;
+    }
+    .font-tajawal {
+        font-family: 'Tajawal', sans-serif !important;
+    }
+    .font-lotus {
+        font-family: 'Lotus', serif !important;
+    }
+}

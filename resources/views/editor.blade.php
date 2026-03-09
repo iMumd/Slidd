@@ -5,13 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $project->title }} — Slidd</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+    <style>
+        .code-view pre  {
+            margin          : 0;
+            border-radius   : 0;
+            background      : transparent !important;
+            padding         : 0;
+        }
+        .code-view .hljs {
+            background      : transparent !important;
+            padding         : 1.1rem 1.4rem;
+            font-size       : 13.5px;
+            line-height     : 1.7;
+            white-space     : pre-wrap;
+            word-break      : break-word;
+        }
+
+        .code-ta {
+            display         : block;
+            width           : 100%;
+            min-height      : 80px;
+            padding         : 1.1rem 1.4rem;
+            background      : transparent;
+            color           : #abb2bf;
+            caret-color     : #e879f9;
+            font-size       : 13.5px;
+            line-height     : 1.7;
+            outline         : none;
+            resize          : none;
+            border          : none;
+            white-space     : pre-wrap;
+            word-break      : break-word;
+            box-sizing      : border-box;
+            overflow        : hidden;
+        }
+        .code-ta::selection { background: rgba(232,121,249,.25); }
+
+        .txt-block:empty:before {
+            content         : attr(data-placeholder);
+            color           : #d1d5db;
+            pointer-events  : none;
+        }
+
+        /* ── Per-paragraph direction — browser inserts <div> on Enter ───────── */
+        .txt-block > div,
+        .txt-block > p {
+            margin     : 0;
+            min-height : 1em;
+        }
+
+        .txt-block ul { list-style-type: disc;    list-style-position: inside; margin-bottom: 0.5rem; }
+        .txt-block ol { list-style-type: decimal; list-style-position: inside; margin-bottom: 0.5rem; }
+        .txt-block li { margin-bottom: 0.2rem; }
+        .txt-block li::marker { color: inherit; font-family: inherit; }
+    </style>
 </head>
-<body class="h-full antialiased" style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;" x-data="editor()" @keydown.escape.window="shareOpen = false">
+<body class="h-full antialiased"
+      style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;"
+      x-data="editor()"
+      @keydown.escape.window="shareOpen = false"
+      @mouseup.window="checkSelection()"
+      @keyup.window="checkSelection()">
 
-    {{-- Navbar --}}
-    <header class="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4 shrink-0">
-
-        {{-- Left: back + title --}}
+    <header class="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4 shrink-0 z-40 relative">
         <div class="flex items-center gap-3 min-w-0">
             <a href="{{ route('dashboard') }}" class="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-slate-900 transition-colors shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -21,15 +80,18 @@
             <span class="text-sm font-semibold text-slate-900 truncate max-w-xs">{{ $project->title }}</span>
         </div>
 
-        {{-- Center: view toggles --}}
         <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            <button @click="view = 'editor'" :class="view === 'editor' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all">
+            <button @click="view = 'editor'"
+                    :class="view === 'editor' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
                 </svg>
                 Editor
             </button>
-            <button @click="view = 'preview'" :class="view === 'preview' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all">
+            <button @click="view = 'preview'"
+                    :class="view === 'preview' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.574-3.007-9.964-7.178z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -38,18 +100,15 @@
             </button>
         </div>
 
-        {{-- Right: share + export --}}
         <div class="flex items-center gap-2">
-
-            {{-- Share button + dropdown --}}
             <div class="relative">
-                <button @click="shareOpen = !shareOpen" class="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                <button @click="shareOpen = !shareOpen"
+                        class="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/>
                     </svg>
                     Share
                 </button>
-
                 <div x-show="shareOpen"
                      x-transition:enter="transition ease-out duration-100"
                      x-transition:enter-start="opacity-0 scale-95"
@@ -65,7 +124,9 @@
                     <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 mb-3">
                         <span class="text-xs text-gray-500 flex-1 truncate">{{ url('/s/' . $project->slug) }}</span>
                     </div>
-                    <button @click="copyLink()" class="w-full text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition-colors" x-text="linkCopied ? 'Copied!' : 'Copy link'">Copy link</button>
+                    <button @click="copyLink()"
+                            class="w-full text-xs font-medium bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition-colors"
+                            x-text="linkCopied ? 'Copied!' : 'Copy link'">Copy link</button>
                 </div>
             </div>
 
@@ -78,17 +139,14 @@
         </div>
     </header>
 
-    {{-- Workspace --}}
     <div class="flex" style="height:calc(100vh - 3.5rem);">
 
-        {{-- Slide panel --}}
+        {{-- Slide panel (static) --}}
         <aside class="w-60 bg-white border-r border-gray-100 flex flex-col shrink-0 overflow-hidden">
             <div class="px-4 pt-4 pb-2">
                 <span class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">Slides</span>
             </div>
-
             <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
-                {{-- Slide 1 thumbnail (active) --}}
                 <div class="relative cursor-pointer rounded-lg overflow-hidden border-2 border-slate-900 ring-2 ring-slate-900/10">
                     <div class="aspect-video bg-white flex items-start p-3">
                         <div class="space-y-1.5 w-full">
@@ -101,7 +159,6 @@
                     <div class="absolute bottom-1 right-1.5 text-[9px] text-gray-400 font-medium">1</div>
                 </div>
             </div>
-
             <div class="px-3 pb-4 pt-2 border-t border-gray-100">
                 <button class="w-full flex items-center justify-center gap-1.5 py-2.5 border border-dashed border-gray-200 hover:border-gray-400 rounded-lg text-xs text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -114,44 +171,130 @@
 
         {{-- Canvas --}}
         <main class="flex-1 overflow-y-auto" style="background:#f4f4f5;">
-            <div class="flex justify-center py-10 px-6">
-                <div class="w-full max-w-3xl bg-white rounded-xl border border-gray-200 shadow-sm" style="min-height:520px; padding:3.5rem 4rem;">
+            <div class="px-6">
+                <div class="bg-white border border-gray-200 shadow-lg rounded-md max-w-4xl mx-auto w-full min-h-[1056px] p-12 sm:p-16 mb-24 mt-8 relative cursor-text"
+                     @click.self="focusLastBlock()">
 
-                    {{-- H1 --}}
-                    <h1 class="text-4xl font-bold text-slate-900 leading-tight mb-5" style="letter-spacing:-0.02em;">{{ $project->title }}</h1>
-
-                    {{-- Body text --}}
-                    <p class="text-base text-gray-500 leading-relaxed mb-7">Start building your presentation. Add text, images, code blocks, and more. Use the sidebar to manage your slides.</p>
-
-                    {{-- Code block --}}
-                    <div class="rounded-xl overflow-hidden mb-7">
-                        <div class="flex items-center justify-between px-4 py-2.5 bg-zinc-900">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-red-500/70 block"></span>
-                                <span class="w-3 h-3 rounded-full bg-yellow-500/70 block"></span>
-                                <span class="w-3 h-3 rounded-full bg-green-500/70 block"></span>
-                            </div>
-                            <span class="text-xs text-zinc-500 font-mono">index.ts</span>
-                            <div class="w-14"></div>
-                        </div>
-                        <div class="bg-zinc-950 px-5 py-4">
-                            <pre class="text-sm leading-loose font-mono"><code><span class="text-blue-400">const</span> <span class="text-emerald-400">slidd</span> <span class="text-gray-300">=</span> <span class="text-purple-400">new</span> <span class="text-yellow-400">Presentation</span><span class="text-gray-300">(</span><span class="text-orange-400">'{{ addslashes($project->title) }}'</span><span class="text-gray-300">);</span>
-<span class="text-zinc-500">// Add your first slide</span>
-<span class="text-emerald-400">slidd</span><span class="text-gray-300">.</span><span class="text-blue-300">addSlide</span><span class="text-gray-300">({</span>
-  <span class="text-red-400">type</span><span class="text-gray-300">:</span> <span class="text-orange-400">'{{ $project->type }}'</span><span class="text-gray-300">,</span>
-<span class="text-gray-300">});</span></code></pre>
-                        </div>
-                    </div>
-
-                    {{-- Add block hint --}}
-                    <button class="flex items-center gap-2 text-sm text-gray-300 hover:text-gray-400 transition-colors select-none group">
-                        <span class="flex items-center justify-center w-5 h-5 rounded-md border border-dashed border-gray-200 group-hover:border-gray-300 transition-colors">
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                    <template x-if="blocks.length === 0">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+                            <svg class="w-8 h-8 text-gray-200 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
                             </svg>
-                        </span>
-                        Click to add a block
-                    </button>
+                            <p class="text-sm text-gray-300 font-medium">Start typing by adding a block below</p>
+                        </div>
+                    </template>
+
+                    <template x-for="block in blocks" :key="block.id">
+                        <div class="relative mb-5 group/block">
+
+                            {{-- Delete handle --}}
+                            <button @click="deleteBlock(block.id)"
+                                    class="absolute -right-9 top-2 opacity-0 group-hover/block:opacity-100 transition-opacity z-10
+                                           flex items-center justify-center w-6 h-6 rounded-md hover:bg-red-50 text-gray-300 hover:text-red-400">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+
+                            <template x-if="block.type === 'text'">
+                                <div contenteditable="true"
+                                     dir="auto"
+                                     data-placeholder="Type something..."
+                                     class="txt-block outline-none min-h-[1.5em] w-full break-words text-start cursor-text block leading-relaxed py-1"
+                                     x-init="
+                                         $el.innerHTML = block.content;
+                                         document.execCommand('defaultParagraphSeparator', false, 'div');
+                                         applyParaDirs($el);
+                                     "
+                                     @keydown.enter="$nextTick(() => applyParaDirs($event.target))"
+                                     @input="
+                                         if ($event.target.innerText.trim() === '') $event.target.innerHTML = '';
+                                         block.content = $event.target.innerHTML;
+                                         applyParaDirs($event.target);
+                                     "
+                                     @keydown.backspace="if ($event.target.innerText.trim() === '') { $event.preventDefault(); deleteBlock(block.id); focusLastBlock(); }">
+                                </div>
+                            </template>
+
+                            <template x-if="block.type === 'code'">
+                                <div class="rounded-2xl overflow-hidden ring-1 ring-white/5"
+                                     style="background:#272822; box-shadow:0 4px 28px rgba(0,0,0,.32);">
+
+                                    {{-- Header bar --}}
+                                    <div class="flex items-center gap-2.5 px-4 py-2.5"
+                                         style="background:rgba(0,0,0,.28); border-bottom:1px solid rgba(255,255,255,.055);">
+                                        <span class="w-3 h-3 rounded-full shrink-0" style="background:#ff5f57;"></span>
+                                        <span class="w-3 h-3 rounded-full shrink-0" style="background:#febc2e;"></span>
+                                        <span class="w-3 h-3 rounded-full shrink-0" style="background:#28c840;"></span>
+
+                                        {{-- Auto-detected language badge --}}
+                                        <span x-show="block.detectedLang"
+                                              x-text="block.detectedLang"
+                                              class="ml-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest select-none">
+                                        </span>
+
+                                        {{-- Edit mode indicator --}}
+                                        <span x-show="block.isEditing"
+                                              class="ml-auto text-[10px] text-zinc-600 font-medium tracking-wide select-none">
+                                            editing — click away to preview
+                                        </span>
+                                    </div>
+
+                                    <div x-show="!block.isEditing"
+                                         class="code-view cursor-text min-h-[52px]"
+                                         @click="startEditing(block, $event.currentTarget)">
+
+                                        <template x-if="block.content.trim().length > 0">
+                                            <pre class="font-jetbrains"><code class="hljs" x-html="block.highlightedContent"></code></pre>
+                                        </template>
+
+                                        <template x-if="block.content.trim().length === 0">
+                                            <div class="px-5 py-4 font-jetbrains text-sm"
+                                                 style="color:rgba(255,255,255,.18);">
+                                                // click to write code...
+                                            </div>
+                                        </template>
+
+                                    </div>
+
+                                    <textarea x-show="block.isEditing"
+                                              x-model="block.content"
+                                              @input="resizeTextarea($event.target)"
+                                              @blur="stopEditing(block)"
+                                              @keydown.tab.prevent="insertTab($event, block)"
+                                              @keydown.backspace="if (block.content.length === 0) { $event.preventDefault(); deleteBlock(block.id); }"
+                                              class="code-ta font-jetbrains"
+                                              spellcheck="false"
+                                              autocomplete="off"
+                                              autocorrect="off"
+                                              autocapitalize="off"
+                                              placeholder="// start typing..."
+                                              style="display:none;">
+                                    </textarea>
+
+                                </div>
+                            </template>
+
+                        </div>
+                    </template>
+
+                    <div class="mt-1 flex items-center gap-3">
+                        <button @click="addTextBlock()"
+                                class="flex items-center gap-1.5 text-xs text-gray-300 hover:text-gray-600 transition-colors select-none group">
+                            <span class="flex items-center justify-center w-5 h-5 rounded-md border border-dashed border-gray-200 group-hover:border-gray-400 transition-colors">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                                </svg>
+                            </span>
+                            Text
+                        </button>
+                        <span class="text-gray-200 select-none">·</span>
+                        <button @click="addCodeBlock()"
+                                class="flex items-center gap-1.5 text-xs text-gray-300 hover:text-gray-600 transition-colors select-none group">
+                            <span class="flex items-center justify-center w-5 h-5 rounded-md border border-dashed border-gray-200 group-hover:border-gray-400 transition-colors font-mono text-[10px] leading-none">&lt;/&gt;</span>
+                            Code
+                        </button>
+                    </div>
 
                 </div>
             </div>
@@ -159,14 +302,193 @@
 
     </div>
 
-    {{-- Toast notification --}}
+    <div x-show="showToolbar"
+         :style="`top:${toolbarY}px; left:${toolbarX}px`"
+         class="fixed z-50 -translate-x-1/2 -translate-y-full pb-2"
+         style="display:none;">
+        <div class="backdrop-blur-md bg-white/95 shadow-xl border border-gray-200 rounded-lg p-1.5 flex gap-0.5 items-center flex-wrap max-w-2xl">
+
+            <div class="relative" @click.away="isFontMenuOpen = false">
+                <button @mousedown.prevent="isFontMenuOpen = !isFontMenuOpen"
+                        class="flex items-center gap-1 px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors select-none">
+                    <span x-text="currentFontName"></span>
+                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="isFontMenuOpen"
+                     x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"   x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute top-full left-0 mt-1 w-36 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg py-1 z-50 flex flex-col"
+                     style="display:none;">
+                    <template x-for="font in ['Arial', 'Cairo', 'Tajawal', 'Lotus', 'JetBrains Mono']" :key="font">
+                        <button @mouseenter="previewFont(font)"
+                                @mousedown.prevent="selectFont(font)"
+                                :style="`font-family: ${font}`"
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors text-gray-700"
+                                x-text="font">
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <div class="relative" @click.away="isFontSizeMenuOpen = false">
+                <button @mousedown.prevent="isFontSizeMenuOpen = !isFontSizeMenuOpen"
+                        class="flex items-center gap-1 px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors select-none min-w-[3rem]">
+                    <span x-text="currentFontSize"></span>
+                    <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="isFontSizeMenuOpen"
+                     x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"   x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute top-full left-0 mt-1 w-24 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg py-1 z-50 flex flex-col max-h-56 overflow-y-auto"
+                     style="display:none;">
+                    <template x-for="size in ['8px','10px','12px','14px','16px','18px','20px','24px','30px','36px','48px','64px']" :key="size">
+                        <button @mouseenter="previewFontSize(size)"
+                                @mousedown.prevent="selectFontSize(size)"
+                                :class="currentFontSize === size ? 'bg-gray-100 font-semibold' : ''"
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors text-gray-700"
+                                x-text="size">
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <div class="w-px h-4 bg-gray-200 mx-0.5"></div>
+
+            <button @mousedown.prevent="formatText('bold')"      class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-800 font-bold text-sm transition-colors">B</button>
+            <button @mousedown.prevent="formatText('italic')"    class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-800 italic text-sm transition-colors">I</button>
+            <button @mousedown.prevent="formatText('underline')" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-800 underline text-sm transition-colors">U</button>
+
+            <div class="w-px h-4 bg-gray-200 mx-0.5"></div>
+
+            <button @mousedown.prevent="formatText('justifyLeft')"   title="Align left"   class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5"/></svg>
+            </button>
+            <button @mousedown.prevent="formatText('justifyCenter')" title="Align center" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M6 12h12M3.75 17.25h16.5"/></svg>
+            </button>
+            <button @mousedown.prevent="formatText('justifyRight')"  title="Align right"  class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M12 12h8.25M3.75 17.25h16.5"/></svg>
+            </button>
+
+            <div class="w-px h-4 bg-gray-200 mx-0.5"></div>
+
+            <button @mousedown.prevent="setBlockDirection('ltr')" title="Left to Right (LTR)"
+                    class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-600 transition-colors text-[10px] font-bold tracking-tight select-none">
+                LTR
+            </button>
+            <button @mousedown.prevent="setBlockDirection('rtl')" title="Right to Left (RTL)"
+                    class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-600 transition-colors text-[10px] font-bold tracking-tight select-none">
+                RTL
+            </button>
+
+            <div class="w-px h-4 bg-gray-200 mx-0.5"></div>
+
+            {{-- Text Color --}}
+            <div class="relative" @click.away="isTextColorMenuOpen = false">
+                <button @mousedown.prevent="isTextColorMenuOpen = !isTextColorMenuOpen"
+                        title="Text color"
+                        class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors select-none">
+                    <span class="flex flex-col items-center gap-0">
+                        <span class="text-xs font-bold text-slate-800 leading-none">A</span>
+                        <span class="w-4 h-1 rounded-sm mt-0.5" :style="`background:${customTextColor}`"></span>
+                    </span>
+                </button>
+                <div x-show="isTextColorMenuOpen"
+                     x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"   x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute top-full left-0 mt-1 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg p-2 z-50 w-48 flex flex-col gap-2"
+                     style="display:none;">
+                    {{-- Preset swatches 5-col grid --}}
+                    <div class="grid grid-cols-5 gap-1.5">
+                        <template x-for="color in presetTextColors" :key="color">
+                            <button @mousedown.prevent="customTextColor = color; applyTextColor(color)"
+                                    :style="`background:${color}`"
+                                    :title="color"
+                                    class="w-6 h-6 rounded border border-white/20 hover:scale-110 transition-transform shadow-sm"
+                                    :class="customTextColor === color ? 'ring-2 ring-offset-1 ring-slate-400' : ''">
+                            </button>
+                        </template>
+                    </div>
+                    <div class="h-px bg-gray-100"></div>
+                    {{-- Custom color row --}}
+                    <div class="flex items-center gap-2">
+                        <div class="relative shrink-0">
+                            <div class="w-7 h-7 rounded border border-gray-300 overflow-hidden cursor-pointer"
+                                 :style="`background:${customTextColor}`">
+                                <input type="color"
+                                       x-model="customTextColor"
+                                       @input="document.execCommand('foreColor', false, customTextColor)"
+                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                       title="Pick custom color">
+                            </div>
+                        </div>
+                        <input type="text"
+                               x-model="customTextColor"
+                               @keydown.enter.prevent="applyTextColor(customTextColor)"
+                               maxlength="7"
+                               placeholder="#0f172a"
+                               class="flex-1 min-w-0 text-xs border border-gray-200 rounded-md px-2 py-1 text-gray-700 font-mono outline-none focus:border-gray-400 bg-white">
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative" @click.away="isHighlightMenuOpen = false">
+                <button @mousedown.prevent="isHighlightMenuOpen = !isHighlightMenuOpen"
+                        title="Highlight color"
+                        class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors select-none">
+                    {{-- Marker icon --}}
+                    <svg class="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-9.5 9.5H5v-3.5L9 11z"/>
+                        <path stroke-linecap="round" d="M3 21h7" stroke-width="2.5" style="stroke:#fef08a"/>
+                    </svg>
+                </button>
+                <div x-show="isHighlightMenuOpen"
+                     x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"   x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute top-full left-0 mt-1 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg p-2 z-50 flex flex-col gap-1 w-32"
+                     style="display:none;">
+                    {{-- Swatch row --}}
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        {{-- Clear --}}
+                        <button @mousedown.prevent="hiliteColor('transparent')"
+                                title="Clear highlight"
+                                class="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:border-gray-500 transition-colors bg-white">
+                            <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                        <button @mousedown.prevent="hiliteColor('#fef08a')" title="Yellow"  class="w-6 h-6 rounded border border-yellow-200 hover:border-yellow-400 transition-colors" style="background:#fef08a;"></button>
+                        <button @mousedown.prevent="hiliteColor('#bbf7d0')" title="Green"   class="w-6 h-6 rounded border border-green-200  hover:border-green-400  transition-colors" style="background:#bbf7d0;"></button>
+                        <button @mousedown.prevent="hiliteColor('#bfdbfe')" title="Blue"    class="w-6 h-6 rounded border border-blue-200   hover:border-blue-400   transition-colors" style="background:#bfdbfe;"></button>
+                        <button @mousedown.prevent="hiliteColor('#fecaca')" title="Red"     class="w-6 h-6 rounded border border-red-200    hover:border-red-400    transition-colors" style="background:#fecaca;"></button>
+                        <button @mousedown.prevent="hiliteColor('#e9d5ff')" title="Purple"  class="w-6 h-6 rounded border border-purple-200 hover:border-purple-400 transition-colors" style="background:#e9d5ff;"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-px h-4 bg-gray-200 mx-0.5"></div>
+
+            <button @mousedown.prevent="formatText('insertUnorderedList')" title="Bullet list"
+                    class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                </svg>
+            </button>
+            <button @mousedown.prevent="formatText('insertOrderedList')" title="Numbered list"
+                    class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 text-slate-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 113.356 1.076 1.125 1.125 0 01-1.256 1.176h-.054m0 0H3.99m-.356 1.234.034-.072a.518.518 0 01.018-.042m0 0H5.34"/>
+                </svg>
+            </button>
+
+        </div>
+    </div>
+
     <div x-show="showToast"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 translate-y-1"
-         x-transition:enter-end="opacity-100 translate-y-0"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 translate-y-0"
-         x-transition:leave-end="opacity-0 translate-y-1"
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"  x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-1"
          class="fixed bottom-5 right-5 flex items-center gap-3 bg-white border border-gray-100 px-4 py-3 rounded-xl shadow-lg z-50"
          style="display:none;">
         <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -175,22 +497,233 @@
         <span class="text-sm font-medium text-slate-900" x-text="toastMsg"></span>
     </div>
 
+    {{-- Highlight.js: synchronous, executes before Alpine's deferred bundle --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
 <script>
 function editor() {
     return {
-        view: 'editor',
-        shareOpen: false,
-        linkCopied: false,
-        showToast: false,
-        toastMsg: '',
-        _timer: null,
+        view        : 'editor',
+        shareOpen   : false,
+        linkCopied  : false,
+        showToast   : false,
+        toastMsg    : '',
+        _timer      : null,
+
+        blocks  : [{ id: 1, type: 'text', content: '' }],
+        _nextId : 2,
+
+        showToolbar         : false,
+        toolbarX            : 0,
+        toolbarY            : 0,
+        isFontMenuOpen      : false,
+        currentFontName     : 'Arial',
+        isFontSizeMenuOpen  : false,
+        currentFontSize     : '16px',
+        isHighlightMenuOpen : false,
+        isTextColorMenuOpen : false,
+        customTextColor     : '#0f172a',
+        presetTextColors    : ['#0f172a','#64748b','#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7','#ec4899'],
+
+        addTextBlock() {
+            this.blocks.push({ id: this._nextId++, type: 'text', content: '' });
+        },
+
+        addCodeBlock() {
+            this.blocks.push({
+                id                : this._nextId++,
+                type              : 'code',
+                content           : '',
+                highlightedContent: '',
+                detectedLang      : '',
+                isEditing         : false,
+            });
+        },
+
+        deleteBlock(id) {
+            this.blocks = this.blocks.filter(b => b.id !== id);
+        },
+
+        focusLastBlock() {
+            const blocks = document.querySelectorAll('[contenteditable="true"]');
+            if (blocks.length > 0) { blocks[blocks.length - 1].focus(); }
+        },
+
+        applyParaDirs(el) {
+            Array.from(el.childNodes).forEach(node => {
+                if (node.nodeType !== Node.ELEMENT_NODE) return;
+                if (node.tagName !== 'DIV' && node.tagName !== 'P') return;
+                const text = node.textContent || '';
+                const dir  = this._detectDir(text);
+                node.setAttribute('dir', dir ?? 'auto');
+            });
+        },
+
+        _detectDir(text) {
+            for (const ch of text) {
+                const cp = ch.codePointAt(0);
+                // Strong RTL: Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan,
+                //             Mandaic, Hebrew/Arabic Presentation Forms
+                if (
+                    (cp >= 0x0590 && cp <= 0x05FF) ||
+                    (cp >= 0x0600 && cp <= 0x06FF) ||
+                    (cp >= 0x0700 && cp <= 0x074F) ||
+                    (cp >= 0x0750 && cp <= 0x077F) ||
+                    (cp >= 0x0780 && cp <= 0x07FF) ||
+                    (cp >= 0x0800 && cp <= 0x083F) ||
+                    (cp >= 0x0840 && cp <= 0x085F) ||
+                    (cp >= 0xFB1D && cp <= 0xFB4F) ||
+                    (cp >= 0xFB50 && cp <= 0xFDFF) ||
+                    (cp >= 0xFE70 && cp <= 0xFEFF)
+                ) return 'rtl';
+                // Strong LTR: Latin, Greek, Cyrillic, Armenian
+                if (
+                    (cp >= 0x0041 && cp <= 0x005A) ||
+                    (cp >= 0x0061 && cp <= 0x007A) ||
+                    (cp >= 0x00C0 && cp <= 0x02B8) ||
+                    (cp >= 0x0370 && cp <= 0x03FF) ||
+                    (cp >= 0x0400 && cp <= 0x04FF) ||
+                    (cp >= 0x0500 && cp <= 0x052F) ||
+                    (cp >= 0x0530 && cp <= 0x058F)
+                ) return 'ltr';
+            }
+            return null;
+        },
+
+        setBlockDirection(dir) {
+            const sel = window.getSelection();
+            if (!sel || !sel.rangeCount) return;
+            let node = sel.getRangeAt(0).commonAncestorContainer;
+            if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+            const ce = node.closest('[contenteditable]');
+            if (!ce) return;
+            let para = node;
+            while (para && para.parentElement !== ce) para = para.parentElement;
+            const target = (para && para !== ce) ? para : ce;
+            target.setAttribute('dir', dir);
+        },
+
+        applyTextColor(color) {
+            document.execCommand('foreColor', false, color);
+            this.isTextColorMenuOpen = false;
+        },
+
+        hiliteColor(color) {
+            if (!document.execCommand('hiliteColor', false, color)) {
+                document.execCommand('backColor', false, color);
+            }
+            this.isHighlightMenuOpen = false;
+        },
+
+        startEditing(block, viewEl) {
+            block.isEditing = true;
+            this.$nextTick(() => {
+                const ta = viewEl.parentElement.querySelector('textarea');
+                if (!ta) return;
+                this.resizeTextarea(ta);
+                ta.focus();
+                ta.selectionStart = ta.selectionEnd = ta.value.length;
+            });
+        },
+
+        stopEditing(block) {
+            block.isEditing = false;
+            this.highlightCode(block);
+        },
+
+        highlightCode(block) {
+            if (!block.content) {
+                block.highlightedContent = '';
+                block.detectedLang       = '';
+                return;
+            }
+            if (typeof hljs === 'undefined') {
+                block.highlightedContent = block.content
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return;
+            }
+            const result             = hljs.highlightAuto(block.content);
+            block.highlightedContent = result.value;
+            block.detectedLang       = result.language || '';
+        },
+
+        resizeTextarea(ta) {
+            ta.style.height = 'auto';
+            ta.style.height = ta.scrollHeight + 'px';
+        },
+
+        insertTab(e, block) {
+            const ta    = e.target;
+            const start = ta.selectionStart;
+            const end   = ta.selectionEnd;
+            block.content = block.content.substring(0, start) + '    ' + block.content.substring(end);
+            this.$nextTick(() => {
+                ta.selectionStart = ta.selectionEnd = start + 4;
+                this.resizeTextarea(ta);
+            });
+        },
+
+        checkSelection() {
+            const sel = window.getSelection();
+            if (!sel || sel.toString().trim().length === 0) {
+                this.showToolbar = false;
+                return;
+            }
+            const rect = sel.getRangeAt(0).getBoundingClientRect();
+            if (!rect || rect.width === 0) { this.showToolbar = false; return; }
+            this.toolbarX    = rect.left + rect.width / 2;
+            this.toolbarY    = rect.top;
+            this.showToolbar = true;
+        },
+
+        formatText(command, value = null) {
+            document.execCommand(command, false, value);
+        },
+
+        previewFont(fontName) {
+            document.execCommand('fontName', false, fontName);
+            // execCommand wraps inner text in <font face>, but the ::marker
+            // pseudo-element inherits font-family from the <li> itself, not
+            // from a descendant <font> node. Stamp the family directly on the
+            // <li> (and its parent list) so the bullet/number glyph updates too.
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount) {
+                let node = sel.getRangeAt(0).commonAncestorContainer;
+                if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+                const li = node.closest('li');
+                if (li) {
+                    li.style.fontFamily = fontName;
+                    const list = li.closest('ul, ol');
+                    if (list) list.style.fontFamily = fontName;
+                }
+            }
+        },
+
+        selectFont(fontName) {
+            this.currentFontName = fontName;
+            this.previewFont(fontName);
+            this.isFontMenuOpen  = false;
+        },
+
+        previewFontSize(size) {
+            document.execCommand('fontSize', false, '7');
+            document.querySelectorAll('font[size="7"]').forEach(font => {
+                font.style.fontSize = size;
+            });
+        },
+
+        selectFontSize(size) {
+            this.currentFontSize    = size;
+            this.previewFontSize(size);
+            this.isFontSizeMenuOpen = false;
+        },
 
         async copyLink() {
             const url = @js(url('/s/' . $project->slug));
             try {
                 await navigator.clipboard.writeText(url);
                 this.linkCopied = true;
-                this.shareOpen = false;
+                this.shareOpen  = false;
                 this.toast('Preview link copied!');
                 setTimeout(() => { this.linkCopied = false; }, 2500);
             } catch {
@@ -200,13 +733,12 @@ function editor() {
 
         toast(msg) {
             clearTimeout(this._timer);
-            this.toastMsg = msg;
+            this.toastMsg  = msg;
             this.showToast = true;
-            this._timer = setTimeout(() => { this.showToast = false; }, 3000);
+            this._timer    = setTimeout(() => { this.showToast = false; }, 3000);
         },
     };
 }
 </script>
-
 </body>
 </html>
