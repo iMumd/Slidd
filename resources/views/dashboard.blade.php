@@ -163,21 +163,82 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @endif
 
+            @php
+                $firstSlide = $project->slides->first();
+                $previewBlocks = $firstSlide ? $firstSlide->blocks->take(7) : collect();
+            @endphp
+
             <div class="relative group">
-                <a href="{{ route('editor.show', $project->slug) }}" class="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-                    <div class="bg-gray-50 h-36 flex items-center justify-center overflow-hidden">
+                <a href="{{ route('editor.show', $project->slug) }}"
+                   class="block rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+                   style="box-shadow:0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);"
+                   onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.07)'"
+                   onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05)'">
+
+                    {{-- Slide preview thumbnail --}}
+                    <div class="relative overflow-hidden bg-white" style="aspect-ratio:16/9; padding:7% 8%;">
+
                         @if ($project->cover_path)
-                            <img src="{{ asset('storage/' . $project->cover_path) }}" class="w-full h-full object-cover" alt="{{ $project->title }}">
+                            <img src="{{ asset('storage/' . $project->cover_path) }}"
+                                 class="absolute inset-0 w-full h-full object-cover" alt="{{ $project->title }}">
+
+                        @elseif ($previewBlocks->isEmpty())
+                            {{-- Empty project skeleton --}}
+                            <div class="absolute inset-0 flex flex-col justify-center items-center gap-2 px-8">
+                                <div style="height:6px; background:#e2e8f0; border-radius:3px; width:58%;"></div>
+                                <div style="height:3.5px; background:#f1f5f9; border-radius:2px; width:90%;"></div>
+                                <div style="height:3.5px; background:#f1f5f9; border-radius:2px; width:76%;"></div>
+                            </div>
+
                         @else
-                            <p class="text-xl font-bold text-gray-200 text-center px-4 leading-tight select-none break-words">{{ $project->title }}</p>
+                            @foreach ($previewBlocks as $i => $block)
+                                <div style="margin-bottom:5px;">
+                                    @if ($block->type === 'text')
+                                        @if ($i === 0)
+                                            {{-- Title line --}}
+                                            <div style="height:6px; background:#1e293b; border-radius:3px; width:62%;"></div>
+                                        @else
+                                            {{-- Body paragraph lines --}}
+                                            <div style="height:3.5px; background:#cbd5e1; border-radius:2px; width:100%; margin-bottom:2px;"></div>
+                                            <div style="height:3.5px; background:#e2e8f0; border-radius:2px; width:{{ [88,75,92,70,83][$i % 5] }}%;"></div>
+                                        @endif
+                                    @elseif ($block->type === 'code')
+                                        <div style="background:#1e1e2e; border-radius:5px; padding:6px 7px;">
+                                            <div style="display:flex; gap:4px; margin-bottom:5px;">
+                                                <div style="width:6px;height:6px;border-radius:50%;background:#ff5f57;"></div>
+                                                <div style="width:6px;height:6px;border-radius:50%;background:#febc2e;"></div>
+                                                <div style="width:6px;height:6px;border-radius:50%;background:#28c840;"></div>
+                                            </div>
+                                            <div style="height:3px;background:#7c6af5;border-radius:2px;width:52%;margin-bottom:3px;"></div>
+                                            <div style="height:3px;background:#4a4a6a;border-radius:2px;width:78%;margin-bottom:3px;"></div>
+                                            <div style="height:3px;background:#4a4a6a;border-radius:2px;width:61%;"></div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
                         @endif
+
+                        {{-- Slide count badge --}}
+                        @if ($project->slides->count() > 1)
+                            <div class="absolute bottom-2 right-2.5 text-[9px] font-semibold text-gray-400 bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full border border-gray-100 leading-none">
+                                {{ $project->slides->count() }} slides
+                            </div>
+                        @endif
+
+                        {{-- Subtle inner border overlay --}}
+                        <div class="absolute inset-0 rounded-none pointer-events-none" style="box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);"></div>
                     </div>
-                    <div class="bg-white p-4 flex justify-between items-center">
+
+                    {{-- Card footer --}}
+                    <div class="bg-white px-4 py-3.5 flex justify-between items-center border-t border-gray-100">
                         <div class="min-w-0">
                             <p class="text-sm font-semibold text-slate-900 truncate">{{ $project->title }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Edited {{ $project->updated_at->diffForHumans() }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $project->updated_at->diffForHumans() }}</p>
                         </div>
-                        <span class="text-[10px] text-gray-300 capitalize ml-3 shrink-0">{{ $project->type }}</span>
+                        <span class="ml-3 shrink-0 text-[9px] font-semibold tracking-widest uppercase px-2 py-1 rounded-full
+                                     {{ $project->type === 'galaxy' ? 'bg-violet-50 text-violet-400' : 'bg-gray-100 text-gray-400' }}">
+                            {{ $project->type }}
+                        </span>
                     </div>
                 </a>
 
@@ -229,9 +290,10 @@
             @if ($loop->last)
                     <div
                         @click="openModal()"
-                        class="border border-gray-100 rounded-2xl flex flex-col justify-center items-center min-h-[220px] bg-white hover:bg-gray-50 transition-colors cursor-pointer text-gray-400 hover:text-gray-500"
+                        class="rounded-2xl flex flex-col justify-center items-center bg-white hover:bg-gray-50 transition-all duration-200 cursor-pointer text-gray-400 hover:text-gray-600 border-2 border-dashed border-gray-200 hover:border-gray-300"
+                        style="aspect-ratio:unset; min-height:220px;"
                     >
-                        <div class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center mb-2.5">
+                        <div class="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center mb-3 shadow-sm">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         </div>
                         <span class="text-sm font-medium">New project</span>

@@ -175,32 +175,116 @@
 
     <div class="flex" style="height:calc(100vh - 3.5rem);">
 
-        {{-- Slide panel (static) --}}
-        <aside class="w-60 bg-white border-r border-gray-100 flex flex-col shrink-0 overflow-hidden">
-            <div class="px-4 pt-4 pb-2">
+        {{-- Slide panel (dynamic) --}}
+        <aside class="w-56 flex flex-col shrink-0 overflow-hidden" style="background:#f0f0f0; border-right:1px solid #e2e2e2;">
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-4 pt-4 pb-3">
                 <span class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">Slides</span>
+                <span class="text-[10px] text-gray-400" x-text="slides.length"></span>
             </div>
-            <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
-                <div class="relative cursor-pointer rounded-lg overflow-hidden border-2 border-slate-900 ring-2 ring-slate-900/10">
-                    <div class="aspect-video bg-white flex items-start p-3">
-                        <div class="space-y-1.5 w-full">
-                            <div class="h-2 bg-gray-800 rounded-sm w-3/4"></div>
-                            <div class="h-1.5 bg-gray-200 rounded-sm w-full"></div>
-                            <div class="h-1.5 bg-gray-200 rounded-sm w-5/6"></div>
-                            <div class="h-4 bg-gray-900 rounded-sm w-full mt-2"></div>
+
+            {{-- Slide list --}}
+            <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-2.5">
+                <template x-for="(slide, index) in slides" :key="slide.id">
+                    <div @click="activeSlideId = slide.id"
+                         class="group/slide relative cursor-pointer select-none"
+                         style="filter: drop-shadow(0 2px 6px rgba(0,0,0,.10));">
+
+                        {{-- Outer frame — active glow vs idle --}}
+                        <div :class="activeSlideId === slide.id
+                                 ? 'ring-2 ring-blue-500'
+                                 : 'ring-1 ring-black/[.07] group-hover/slide:ring-black/20'"
+                             class="rounded-md overflow-hidden transition-all duration-150">
+
+                            {{-- Mini slide canvas --}}
+                            <div class="aspect-video bg-white relative overflow-hidden" style="padding: 8% 9%;">
+
+                                {{-- Empty state skeleton --}}
+                                <template x-if="slide.blocks.length === 0">
+                                    <div class="absolute inset-0 flex flex-col justify-center items-center gap-1.5 px-5">
+                                        <div class="h-[5px] rounded-full bg-gray-200 w-2/3"></div>
+                                        <div class="h-[3px] rounded-full bg-gray-100 w-full"></div>
+                                        <div class="h-[3px] rounded-full bg-gray-100 w-5/6"></div>
+                                    </div>
+                                </template>
+
+                                {{-- Block rows --}}
+                                <template x-for="(b, bi) in slide.blocks.slice(0, 6)" :key="b.id">
+                                    <div class="mb-[4px] w-full">
+
+                                        {{-- Text block --}}
+                                        <template x-if="b.type === 'text'">
+                                            <div>
+                                                <template x-if="bi === 0">
+                                                    <div class="h-[5px] rounded-full mb-[3px]"
+                                                         style="background:#1e293b; width:68%;"></div>
+                                                </template>
+                                                <template x-if="bi !== 0">
+                                                    <div class="space-y-[2.5px]">
+                                                        <div class="h-[3px] rounded-full" style="background:#cbd5e1; width:100%;"></div>
+                                                        <div class="h-[3px] rounded-full" style="background:#e2e8f0; width:82%;"></div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+
+                                        {{-- Code block --}}
+                                        <template x-if="b.type === 'code'">
+                                            <div class="rounded-[3px] overflow-hidden" style="background:#1e1e2e; padding: 4px 5px;">
+                                                <div class="flex gap-[3px] mb-[3px]">
+                                                    <div class="w-[5px] h-[5px] rounded-full" style="background:#ff5f57;"></div>
+                                                    <div class="w-[5px] h-[5px] rounded-full" style="background:#febc2e;"></div>
+                                                    <div class="w-[5px] h-[5px] rounded-full" style="background:#28c840;"></div>
+                                                </div>
+                                                <div class="space-y-[2px]">
+                                                    <div class="h-[2.5px] rounded-full" style="background:#7c6af5; width:55%;"></div>
+                                                    <div class="h-[2.5px] rounded-full" style="background:#4a4a6a; width:80%;"></div>
+                                                    <div class="h-[2.5px] rounded-full" style="background:#4a4a6a; width:65%;"></div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                    </div>
+                                </template>
+
+                            </div>
+
+                            {{-- Footer bar: number + delete --}}
+                            <div class="flex items-center justify-between px-2 py-1"
+                                 :class="activeSlideId === slide.id ? 'bg-blue-500' : 'bg-gray-100'"
+                                 style="border-top: 1px solid rgba(0,0,0,.06);">
+                                <span class="text-[9px] font-semibold leading-none"
+                                      :class="activeSlideId === slide.id ? 'text-white/80' : 'text-gray-400'"
+                                      x-text="'Slide ' + (index + 1)"></span>
+                                <button x-show="slides.length > 1"
+                                        @click.stop="deleteSlide(slide.id)"
+                                        :class="activeSlideId === slide.id
+                                            ? 'text-white/60 hover:text-white hover:bg-white/20'
+                                            : 'text-gray-400 hover:text-red-500 hover:bg-red-50'"
+                                        class="opacity-0 group-hover/slide:opacity-100 transition-all w-4 h-4 flex items-center justify-center rounded">
+                                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+
                         </div>
                     </div>
-                    <div class="absolute bottom-1 right-1.5 text-[9px] text-gray-400 font-medium">1</div>
-                </div>
+                </template>
             </div>
-            <div class="px-3 pb-4 pt-2 border-t border-gray-100">
-                <button class="w-full flex items-center justify-center gap-1.5 py-2.5 border border-dashed border-gray-200 hover:border-gray-400 rounded-lg text-xs text-gray-400 hover:text-gray-600 transition-colors">
+
+            {{-- Add slide --}}
+            <div class="px-3 pb-4 pt-2" style="border-top: 1px solid #e2e2e2;">
+                <button @click="addSlide()"
+                        class="w-full flex items-center justify-center gap-1.5 py-2 rounded-md text-xs font-medium text-gray-500 hover:text-slate-800 hover:bg-white transition-all border border-dashed border-gray-300 hover:border-gray-400">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                     </svg>
-                    Add Slide
+                    New Slide
                 </button>
             </div>
+
         </aside>
 
         {{-- Canvas --}}
@@ -209,7 +293,7 @@
                 <div class="bg-white border border-gray-200 shadow-lg rounded-md max-w-4xl mx-auto w-full min-h-[1056px] p-12 sm:p-16 mb-24 mt-8 relative cursor-text"
                      @click.self="focusLastBlock()">
 
-                    <template x-if="blocks.length === 0">
+                    <template x-if="activeBlocks.length === 0">
                         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
                             <svg class="w-8 h-8 text-gray-200 mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
@@ -218,8 +302,35 @@
                         </div>
                     </template>
 
-                    <template x-for="block in blocks" :key="block.id">
-                        <div class="relative mb-5 group/block">
+                    <template x-for="(block, index) in activeBlocks" :key="block.id">
+                        <div class="relative mb-5 group/block transition-[border]"
+                             draggable="true"
+                             @dragstart="if (!_draggingFromHandle) { $event.preventDefault(); return; } startDrag(index)"
+                             @dragover.prevent="
+                                 dragOverIndex = index;
+                                 const rect = $event.currentTarget.getBoundingClientRect();
+                                 dragDropPosition = $event.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom';
+                             "
+                             @dragleave="dragOverIndex = null; dragDropPosition = null;"
+                             @drop.prevent="handleDrop(index)"
+                             @dragend="resetDrag()"
+                             :class="{
+                                 'border-t-2 border-blue-500 rounded-none': dragOverIndex === index && dragDropPosition === 'top'  && draggedBlockIndex !== index,
+                                 'border-b-2 border-blue-500 rounded-none': dragOverIndex === index && dragDropPosition === 'bottom' && draggedBlockIndex !== index,
+                                 'opacity-40 scale-[0.98]': draggedBlockIndex === index
+                             }">
+
+                            {{-- Drag handle --}}
+                            <div class="absolute -left-7 top-2 opacity-0 group-hover/block:opacity-100 transition-opacity
+                                        cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 z-10 select-none"
+                                 @mousedown="_draggingFromHandle = true"
+                                 @mouseup="_draggingFromHandle = false"
+                                 @mouseleave="_draggingFromHandle = false"
+                                 title="Drag to reorder">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5 4a1 1 0 110-2 1 1 0 010 2zm6 0a1 1 0 110-2 1 1 0 010 2zm-6 5a1 1 0 110-2 1 1 0 010 2zm6 0a1 1 0 110-2 1 1 0 010 2zm-6 5a1 1 0 110-2 1 1 0 010 2zm6 0a1 1 0 110-2 1 1 0 010 2z"/>
+                                </svg>
+                            </div>
 
                             {{-- Delete handle --}}
                             <button @click="deleteBlock(block.id)"
@@ -232,6 +343,7 @@
 
                             <template x-if="block.type === 'text'">
                                 <div contenteditable="true"
+                                     draggable="false"
                                      dir="auto"
                                      data-placeholder="Type something..."
                                      class="txt-block outline-none min-h-[1.5em] w-full break-words text-start cursor-text block leading-relaxed py-1"
@@ -624,6 +736,25 @@
                     </div>
                 </div>
 
+                {{-- Section: Edit --}}
+                <p class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase pt-4 mb-3">Edit</p>
+
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Save</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⇧</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">S</kbd>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <span class="text-sm text-slate-700">Undo</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">⌘</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-mono font-bold text-slate-600 shadow-sm">Z</kbd>
+                    </div>
+                </div>
+
                 {{-- Section: Insert & Size --}}
                 <p class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase pt-4 mb-3">Insert & Size</p>
 
@@ -689,8 +820,14 @@ function editor() {
         toastMsg    : '',
         _timer      : null,
 
-        blocks  : {!! count($savedBlocks) ? \Illuminate\Support\Js::from($savedBlocks) : '[{"id":1,"type":"text","content":""}]' !!},
-        _nextId : {{ count($savedBlocks) ? collect($savedBlocks)->max('id') + 1 : 2 }},
+        slides      : {!! !empty($savedSlides) ? \Illuminate\Support\Js::from($savedSlides) : '[{"id":1,"blocks":[{"id":2,"type":"text","content":"","detectedLang":"","highlightedContent":"","isEditing":false}]}]' !!},
+        activeSlideId: {!! !empty($savedSlides) ? (int)$savedSlides[0]['id'] : 1 !!},
+        _nextId     : {!! $nextId !!},
+
+        get activeBlocks() {
+            const slide = this.slides.find(s => s.id === this.activeSlideId);
+            return slide ? slide.blocks : [];
+        },
 
         showToolbar         : false,
         toolbarX            : 0,
@@ -704,16 +841,24 @@ function editor() {
         isTextColorMenuOpen   : false,
         isShortcutsModalOpen  : false,
         _previewConfirmed     : false,
+        _deleteHistory      : [],
+        draggedBlockIndex   : null,
+        dragOverIndex       : null,
+        dragDropPosition    : null,
+        _draggingFromHandle : false,
         customTextColor     : '#0f172a',
         presetTextColors    : ['#0f172a','#64748b','#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7','#ec4899'],
 
 
         init() {
-            this.blocks.forEach(block => {
-                if (block.type === 'code' && block.content) {
-                    block.highlightedContent = hljs.highlightAuto(block.content).value;
-                    block.detectedLang       = hljs.highlightAuto(block.content).language || '';
-                }
+            this.slides.forEach(slide => {
+                slide.blocks.forEach(block => {
+                    if (block.type === 'code' && block.content) {
+                        const result             = hljs.highlightAuto(block.content);
+                        block.highlightedContent = result.value;
+                        block.detectedLang       = result.language || '';
+                    }
+                });
             });
             // Register shortcut listener in capture phase so we intercept
             // before the browser handles conflicting built-in shortcuts.
@@ -731,7 +876,7 @@ function editor() {
                         'Accept'       : 'application/json',
                         'X-CSRF-TOKEN' : document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     },
-                    body: JSON.stringify({ blocks: this.blocks }),
+                    body: JSON.stringify({ slides: this.slides }),
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message ?? data.error ?? `HTTP ${res.status}`);
@@ -745,11 +890,13 @@ function editor() {
         },
 
         addTextBlock() {
-            this.blocks.push({ id: this._nextId++, type: 'text', content: '' });
+            const slide = this.slides.find(s => s.id === this.activeSlideId);
+            if (slide) slide.blocks.push({ id: this._nextId++, type: 'text', content: '' });
         },
 
         addCodeBlock() {
-            this.blocks.push({
+            const slide = this.slides.find(s => s.id === this.activeSlideId);
+            if (slide) slide.blocks.push({
                 id                : this._nextId++,
                 type              : 'code',
                 content           : '',
@@ -760,7 +907,62 @@ function editor() {
         },
 
         deleteBlock(id) {
-            this.blocks = this.blocks.filter(b => b.id !== id);
+            const slide = this.slides.find(s => s.id === this.activeSlideId);
+            if (!slide) return;
+            const idx   = slide.blocks.findIndex(b => b.id === id);
+            if (idx === -1) return;
+            this._deleteHistory.push({ slideId: this.activeSlideId, index: idx, block: slide.blocks[idx] });
+            if (this._deleteHistory.length > 30) this._deleteHistory.shift();
+            slide.blocks = slide.blocks.filter(b => b.id !== id);
+        },
+
+        undoDelete() {
+            const entry = this._deleteHistory.pop();
+            if (!entry) return;
+            const slide = this.slides.find(s => s.id === entry.slideId);
+            if (!slide) return;
+            slide.blocks.splice(entry.index, 0, entry.block);
+            this.activeSlideId = entry.slideId;
+            this.toast('Block restored');
+        },
+
+        startDrag(index) {
+            this.draggedBlockIndex = index;
+        },
+
+        resetDrag() {
+            this.draggedBlockIndex = null;
+            this.dragOverIndex     = null;
+            this.dragDropPosition  = null;
+            this._draggingFromHandle = false;
+        },
+
+        handleDrop(targetIndex) {
+            if (this.draggedBlockIndex === null) { this.resetDrag(); return; }
+            const blocks = this.slides.find(s => s.id === this.activeSlideId).blocks;
+            let insertIndex = this.dragDropPosition === 'bottom' ? targetIndex + 1 : targetIndex;
+            // Compensate: after splicing the source out, all indices above it shift down by 1
+            if (this.draggedBlockIndex < insertIndex) insertIndex--;
+            if (this.draggedBlockIndex === insertIndex) { this.resetDrag(); return; }
+            const [moved] = blocks.splice(this.draggedBlockIndex, 1);
+            blocks.splice(insertIndex, 0, moved);
+            this.resetDrag();
+        },
+
+        addSlide() {
+            const id = this._nextId++;
+            this.slides.push({ id, blocks: [{ id: this._nextId++, type: 'text', content: '' }] });
+            this.activeSlideId = id;
+        },
+
+        deleteSlide(id) {
+            if (this.slides.length <= 1) return;
+            const idx = this.slides.findIndex(s => s.id === id);
+            this.slides = this.slides.filter(s => s.id !== id);
+            // If deleting the active slide, activate the nearest remaining slide
+            if (this.activeSlideId === id) {
+                this.activeSlideId = this.slides[Math.min(idx, this.slides.length - 1)].id;
+            }
         },
 
         focusLastBlock() {
@@ -824,7 +1026,20 @@ function editor() {
 
         handleShortcuts(e) {
             const mod = e.ctrlKey || e.metaKey;
-            if (!mod || !e.shiftKey) return;
+            if (!mod) return;
+
+            // Ctrl+Z — undo.
+            // If we have deleted blocks in history, restore the most recent one.
+            // Otherwise don't intercept so the browser's native text undo runs.
+            if (e.code === 'KeyZ' && !e.shiftKey) {
+                if (this._deleteHistory.length > 0) {
+                    e.preventDefault();
+                    this.undoDelete();
+                }
+                return;
+            }
+
+            if (!e.shiftKey) return;
 
             // Only act when focus is inside a text block
             const ab = document.activeElement?.closest('[contenteditable]')
@@ -853,6 +1068,10 @@ function editor() {
 
             // e.code is keyboard-layout-independent ('KeyH', 'Period', etc.)
             switch (e.code) {
+                case 'KeyS':
+                    e.preventDefault();
+                    this.saveProject();
+                    break;
                 case 'KeyH':
                     e.preventDefault();
                     document.execCommand('insertHTML', false,

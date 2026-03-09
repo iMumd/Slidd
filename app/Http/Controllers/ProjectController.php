@@ -16,19 +16,26 @@ class ProjectController extends Controller
         $project = Project::where('slug', $slug)->firstOrFail();
         abort_if($project->user_id !== $request->user()->id, 403);
 
-        $slide       = $project->slides()->where('order_index', 0)->first();
-        $savedBlocks = $slide
-            ? $slide->blocks()->orderBy('order_index')->get()->map(fn($b) => [
-                'id'               => $b->id,
-                'type'             => $b->type,
-                'content'          => $b->type === 'code' ? ($b->content['code'] ?? '') : ($b->content['html'] ?? ''),
-                'detectedLang'     => $b->content['lang'] ?? '',
+        $savedSlides = $project->slides()->orderBy('order_index')->get()->map(fn($slide) => [
+            'id'     => $slide->id,
+            'blocks' => $slide->blocks()->orderBy('order_index')->get()->map(fn($b) => [
+                'id'                 => $b->id,
+                'type'               => $b->type,
+                'content'            => $b->type === 'code' ? ($b->content['code'] ?? '') : ($b->content['html'] ?? ''),
+                'detectedLang'       => $b->content['lang'] ?? '',
                 'highlightedContent' => '',
-                'isEditing'        => false,
-            ])->values()->all()
-            : [];
+                'isEditing'          => false,
+            ])->values()->all(),
+        ])->values()->all();
 
-        return view('editor', compact('project', 'savedBlocks'));
+        // Compute max ID across all slides and blocks for _nextId seeding
+        $allIds = collect($savedSlides)->flatMap(fn($s) => array_merge(
+            [$s['id']],
+            array_column($s['blocks'], 'id')
+        ));
+        $nextId = $allIds->filter()->isEmpty() ? 3 : ($allIds->max() + 1);
+
+        return view('editor', compact('project', 'savedSlides', 'nextId'));
     }
 
     public function store(Request $request): JsonResponse
@@ -100,33 +107,39 @@ class ProjectController extends Controller
             abort_if($project->user_id !== $request->user()->id, 403);
 
             $request->validate([
-                'blocks'         => ['present', 'array'],
-                'blocks.*.type'  => ['required', 'string'],
+                'slides'                   => ['present', 'array'],
+                'slides.*.blocks'          => ['present', 'array'],
+                'slides.*.blocks.*.type'   => ['required', 'string'],
             ]);
 
-            // Get or create the first slide for this project
-            $slide = $project->slides()->firstOrCreate(
-                ['order_index' => 0],
-                ['title' => 'Slide 1', 'type' => SlideType::SolidText, 'order_index' => 0]
-            );
+            // Delete all existing slides (blocks cascade via DB foreign key / Eloquent)
+            foreach ($project->slides as $slide) {
+                $slide->blocks()->delete();
+            }
+            $project->slides()->delete();
 
-            // Replace all blocks
-            $slide->blocks()->delete();
-
-            foreach ($request->blocks as $index => $raw) {
-                $type    = $raw['type'];
-                $content = match ($type) {
-                    'code'  => ['code' => $raw['content'] ?? '', 'lang' => $raw['detectedLang'] ?? ''],
-                    default => ['html' => $raw['content'] ?? ''],
-                };
-
-                $slide->blocks()->create([
-                    'type'        => $type,
-                    'content'     => $content,
-                    'order_index' => $index,
-                    'position'    => ['x' => 0, 'y' => 0],
-                    'dimensions'  => ['w' => 0, 'h' => 0],
+            foreach ($request->slides as $slideIndex => $slideData) {
+                $slide = $project->slides()->create([
+                    'title'       => 'Slide ' . ($slideIndex + 1),
+                    'type'        => SlideType::SolidText,
+                    'order_index' => $slideIndex,
                 ]);
+
+                foreach ($slideData['blocks'] as $blockIndex => $raw) {
+                    $type    = $raw['type'];
+                    $content = match ($type) {
+                        'code'  => ['code' => $raw['content'] ?? '', 'lang' => $raw['detectedLang'] ?? ''],
+                        default => ['html' => $raw['content'] ?? ''],
+                    };
+
+                    $slide->blocks()->create([
+                        'type'        => $type,
+                        'content'     => $content,
+                        'order_index' => $blockIndex,
+                        'position'    => ['x' => 0, 'y' => 0],
+                        'dimensions'  => ['w' => 0, 'h' => 0],
+                    ]);
+                }
             }
 
             return response()->json(['ok' => true]);

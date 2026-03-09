@@ -19,7 +19,13 @@ Route::get('/terms', fn() => view('legal.terms'))->name('terms');
 Route::get('/security', fn() => view('legal.security'))->name('security');
 
 Route::get('/dashboard', function () {
-    $projects = auth()->user()->projects()->latest()->get();
+    $projects = auth()->user()->projects()
+        ->with([
+            'slides'        => fn($q) => $q->orderBy('order_index'),
+            'slides.blocks' => fn($q) => $q->orderBy('order_index'),
+        ])
+        ->latest()
+        ->get();
     return view('dashboard', compact('projects'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
