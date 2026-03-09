@@ -148,6 +148,64 @@ class ProjectController extends Controller
         }
     }
 
+    public function import(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->json()->all();
+
+            if (empty($data['slides']) || !is_array($data['slides'])) {
+                return response()->json(['error' => 'Invalid .slidd file.'], 422);
+            }
+
+            $baseTitle = trim($data['project']['title'] ?? 'Imported Project');
+            $type      = in_array($data['project']['type'] ?? '', ['slides', 'galaxy'])
+                ? $data['project']['type']
+                : 'slides';
+
+            $title = $baseTitle;
+            $i     = 1;
+            while (Project::where('user_id', $request->user()->id)->where('title', $title)->exists()) {
+                $title = "{$baseTitle} ({$i})";
+                $i++;
+            }
+
+            $project = Project::create([
+                'user_id' => $request->user()->id,
+                'title'   => $title,
+                'slug'    => (string) Str::uuid(),
+                'type'    => $type,
+            ]);
+
+            foreach ($data['slides'] as $slideIndex => $slideData) {
+                $slide = $project->slides()->create([
+                    'title'       => 'Slide ' . ($slideIndex + 1),
+                    'type'        => SlideType::SolidText,
+                    'order_index' => $slideIndex,
+                ]);
+
+                foreach ($slideData['blocks'] ?? [] as $blockIndex => $raw) {
+                    $blockType = $raw['type'] ?? 'text';
+                    $content   = match ($blockType) {
+                        'code'  => ['code' => $raw['content'] ?? '', 'lang' => $raw['detectedLang'] ?? ''],
+                        default => ['html' => $raw['content'] ?? ''],
+                    };
+
+                    $slide->blocks()->create([
+                        'type'        => $blockType,
+                        'content'     => $content,
+                        'order_index' => $blockIndex,
+                        'position'    => ['x' => 0, 'y' => 0],
+                        'dimensions'  => ['w' => 0, 'h' => 0],
+                    ]);
+                }
+            }
+
+            return response()->json(['redirect_url' => route('editor.show', $project->slug)]);
+        } catch (Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function destroy(Request $request, Project $project): JsonResponse
     {
         try {

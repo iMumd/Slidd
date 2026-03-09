@@ -44,6 +44,32 @@
 
         showError(msg) { this.showToastMsg(msg, false, true); },
 
+        async importSlidd(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                if (!data.slides || !Array.isArray(data.slides)) throw new Error('Invalid .slidd file.');
+                this.showToastMsg('Importing…', true);
+                const res = await fetch('/projects/import', {
+                    method  : 'POST',
+                    headers : {
+                        'Content-Type' : 'application/json',
+                        'Accept'       : 'application/json',
+                        'X-CSRF-TOKEN' : document.querySelector('meta[name=csrf-token]').content,
+                    },
+                    body: JSON.stringify(data),
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error ?? `HTTP ${res.status}`);
+                window.location.href = result.redirect_url;
+            } catch (err) {
+                this.showError('Import failed: ' + err.message);
+            }
+            event.target.value = '';
+        },
+
         openModal() {
             this.showModal = true;
             this.$nextTick(() => this.$refs.titleInput && this.$refs.titleInput.focus());
@@ -152,12 +178,24 @@
             <h1 class="text-2xl font-bold text-slate-900" x-text="greeting + ', {{ Auth::user()->name }}.'"></h1>
             <p class="text-sm text-gray-400 mt-1">Here's what you've been working on.</p>
         </div>
-        <button
-            @click="openModal()"
-            class="bg-slate-900 text-white text-sm font-medium py-2 px-4 rounded-lg shadow-sm hover:bg-slate-800 transition-colors"
-        >
-            + Create New Project
-        </button>
+        <div class="flex items-center gap-2">
+            <input type="file" x-ref="sliddImport" accept=".slidd" class="hidden" @change="importSlidd($event)">
+            <button
+                @click="$refs.sliddImport.click()"
+                class="flex items-center gap-1.5 text-sm font-medium text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-slate-900 py-2 px-4 rounded-lg transition-colors"
+            >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                </svg>
+                Import .slidd
+            </button>
+            <button
+                @click="openModal()"
+                class="bg-slate-900 text-white text-sm font-medium py-2 px-4 rounded-lg shadow-sm hover:bg-slate-800 transition-colors"
+            >
+                + Create New Project
+            </button>
+        </div>
     </div>
 
     <div class="relative" style="min-height:calc(100vh - 11rem);">
