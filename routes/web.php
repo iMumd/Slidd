@@ -11,9 +11,24 @@ Route::get('/', function () {
 
 Route::get('/introduction', fn() => view('introduction'))->name('introduction');
 Route::get('/s/{slug}', function (string $slug) {
-    $project = Project::where('slug', $slug)->firstOrFail();
-    return view('preview', compact('project'));
+    $project = Project::with([
+        'slides'        => fn($q) => $q->orderBy('order_index'),
+        'slides.blocks' => fn($q) => $q->orderBy('order_index'),
+        'user',
+    ])->where('slug', $slug)->firstOrFail();
+
+    $slides = $project->slides->map(fn($slide) => [
+        'id'     => $slide->id,
+        'blocks' => $slide->blocks->map(fn($b) => [
+            'type'        => $b->type,
+            'content'     => $b->type === 'code' ? ($b->content['code'] ?? '') : ($b->content['html'] ?? ''),
+            'detectedLang'=> $b->content['lang'] ?? '',
+        ])->values()->all(),
+    ])->values()->all();
+
+    return view('preview', compact('project', 'slides'));
 })->name('project.preview');
+
 Route::get('/privacy', fn() => view('legal.privacy'))->name('privacy');
 Route::get('/terms', fn() => view('legal.terms'))->name('terms');
 Route::get('/security', fn() => view('legal.security'))->name('security');
