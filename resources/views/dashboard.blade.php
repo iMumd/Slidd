@@ -137,7 +137,9 @@
     @keydown.escape.window="closeModal(); closeRename(); closeDelete(); openDropdown = null;"
 >
 
-    <div class="p-10 pb-0 flex items-start justify-between">
+    <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 md:px-10 py-10">
+
+    <div class="flex items-start justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-900">Good morning, {{ Auth::user()->name }}.</h1>
             <p class="text-sm text-gray-400 mt-1">Here's what you've been working on.</p>
@@ -150,7 +152,7 @@
         </button>
     </div>
 
-    <div class="p-10 relative" style="min-height:calc(100vh - 11rem);">
+    <div class="relative" style="min-height:calc(100vh - 11rem);">
 
         @forelse ($projects as $project)
             @if ($loop->first)
@@ -248,6 +250,8 @@
             </div>
 
         @endforelse
+
+    </div>
 
     </div>
 
