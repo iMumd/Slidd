@@ -114,34 +114,46 @@
                                 <p class="text-xs text-zinc-400 mt-0.5">Projects, slides, blocks with JSON edge support</p>
                             </div>
                         </div>
-                        <div class="relative">
+                        <div class="relative pb-5">
                             <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
                             <div class="pl-4">
                                 <p class="text-sm font-medium text-zinc-800">Landing page &amp; authentication</p>
                                 <p class="text-xs text-zinc-400 mt-0.5">Register, login, password reset, email verification</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-blue-600">In progress</span>
-                        <div class="flex-1 h-px bg-blue-100"></div>
-                    </div>
-                    <div class="relative pl-5 border-l border-blue-200 space-y-0">
                         <div class="relative pb-5">
-                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-blue-400 border-2 border-white ring-1 ring-blue-300"></div>
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
                             <div class="pl-4">
                                 <p class="text-sm font-medium text-zinc-800">Dashboard</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Project list, create &amp; delete decks</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Project grid, create, rename, delete — with time-aware greeting</p>
+                            </div>
+                        </div>
+                        <div class="relative pb-5">
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
+                            <div class="pl-4">
+                                <p class="text-sm font-medium text-zinc-800">Solid Text editor</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Block-based authoring with drag-reorder, RTL/LTR, rich formatting, and pro hotkeys</p>
+                            </div>
+                        </div>
+                        <div class="relative pb-5">
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
+                            <div class="pl-4">
+                                <p class="text-sm font-medium text-zinc-800">Native code blocks</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Auto language detection and syntax highlighting powered by Highlight.js</p>
+                            </div>
+                        </div>
+                        <div class="relative pb-5">
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
+                            <div class="pl-4">
+                                <p class="text-sm font-medium text-zinc-800">Public deck sharing &amp; viewer</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Editor-style read-only view at <code class="font-mono">/s/{slug}</code> — no account needed</p>
                             </div>
                         </div>
                         <div class="relative">
-                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-blue-400 border-2 border-white ring-1 ring-blue-300"></div>
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
                             <div class="pl-4">
-                                <p class="text-sm font-medium text-zinc-800">Solid Text editor</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Block-based slide authoring</p>
+                                <p class="text-sm font-medium text-zinc-800"><code class="text-xs bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded font-mono">.slidd</code> export &amp; import</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Portable JSON project bundle — export from editor, import to dashboard</p>
                             </div>
                         </div>
                     </div>
@@ -156,13 +168,6 @@
                         <div class="relative pb-5">
                             <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-zinc-300"></div>
                             <div class="pl-4">
-                                <p class="text-sm text-zinc-500">Native code blocks with syntax highlighting</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Powered by Shiki</p>
-                            </div>
-                        </div>
-                        <div class="relative pb-5">
-                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-zinc-300"></div>
-                            <div class="pl-4">
                                 <p class="text-sm text-zinc-500">Galaxy Space — infinite canvas</p>
                                 <p class="text-xs text-zinc-400 mt-0.5">Pannable blocks, connectable edges, freeform layout</p>
                             </div>
@@ -170,22 +175,8 @@
                         <div class="relative pb-5">
                             <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-zinc-300"></div>
                             <div class="pl-4">
-                                <p class="text-sm text-zinc-500">Present mode</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Full-screen, keyboard-navigable presentation view</p>
-                            </div>
-                        </div>
-                        <div class="relative pb-5">
-                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-zinc-300"></div>
-                            <div class="pl-4">
-                                <p class="text-sm text-zinc-500">Public deck sharing</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Share via slug URL, no account needed to view</p>
-                            </div>
-                        </div>
-                        <div class="relative">
-                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-zinc-300"></div>
-                            <div class="pl-4">
-                                <p class="text-sm text-zinc-500"><code class="text-xs bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded font-mono">.slidd</code> export format</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Portable JSON bundle of the full project tree</p>
+                                <p class="text-sm text-zinc-500">PDF export</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Print-ready slide output from the editor</p>
                             </div>
                         </div>
                     </div>
@@ -199,15 +190,17 @@
         <section>
             <h2 class="text-base font-semibold text-zinc-900 mb-4">Built with</h2>
             <div class="grid grid-cols-2 gap-3">
+
                 <div class="rounded-xl border border-zinc-200 px-4 py-3 flex items-center gap-3">
                     <div class="w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="#ef4444"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-zinc-800">Laravel 12</p>
-                        <p class="text-[11px] text-zinc-400">PHP 8.2+</p>
+                        <p class="text-[11px] text-zinc-400">PHP 8.2+ backend</p>
                     </div>
                 </div>
+
                 <div class="rounded-xl border border-zinc-200 px-4 py-3 flex items-center gap-3">
                     <div class="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M12 6.5a1 1 0 110-2 1 1 0 010 2zM6 12a6 6 0 1112 0A6 6 0 016 12z"/></svg>
@@ -217,15 +210,39 @@
                         <p class="text-[11px] text-zinc-400">Utility-first styling</p>
                     </div>
                 </div>
+
+                <div class="rounded-xl border border-zinc-200 px-4 py-3 flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-lg bg-cyan-50 border border-cyan-100 flex items-center justify-center shrink-0">
+                        {{-- Alpine.js mountain icon --}}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13 8 9 12 2 17"/><polyline points="16 17 13 8 9 14"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-zinc-800">Alpine.js</p>
+                        <p class="text-[11px] text-zinc-400">Reactive UI, zero build step</p>
+                    </div>
+                </div>
+
                 <div class="rounded-xl border border-zinc-200 px-4 py-3 flex items-center gap-3">
                     <div class="w-7 h-7 rounded-lg bg-yellow-50 border border-yellow-100 flex items-center justify-center shrink-0">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="#eab308"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-zinc-800">Vite</p>
-                        <p class="text-[11px] text-zinc-400">Frontend tooling</p>
+                        <p class="text-[11px] text-zinc-400">Frontend build tooling</p>
                     </div>
                 </div>
+
+                <div class="rounded-xl border border-zinc-200 px-4 py-3 flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                        {{-- Highlight.js flame-ish icon --}}
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/><path d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-zinc-800">Highlight.js</p>
+                        <p class="text-[11px] text-zinc-400">Auto syntax highlighting</p>
+                    </div>
+                </div>
+
                 <div class="rounded-xl border border-zinc-200 px-4 py-3 flex items-center gap-3">
                     <div class="w-7 h-7 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="4"/><path d="M2 12c0 2.21 4.48 4 10 4s10-1.79 10-4"/><path d="M2 12v6c0 2.21 4.48 4 10 4s10-1.79 10-4v-6"/></svg>
@@ -235,6 +252,7 @@
                         <p class="text-[11px] text-zinc-400">Relational database</p>
                     </div>
                 </div>
+
             </div>
         </section>
 
