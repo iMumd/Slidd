@@ -145,38 +145,36 @@
                         <div class="relative pb-5">
                             <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
                             <div class="pl-4">
-                                <p class="text-sm font-medium text-zinc-800">Public deck sharing &amp; viewer</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Editor-style read-only view at <code class="font-mono">/s/{slug}</code> — no account needed</p>
+                                <p class="text-sm font-medium text-zinc-800">Public sharing &amp; read-only preview</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Shareable link at <code class="font-mono text-xs">/s/{slug}</code> for both slides and Galaxy — no account needed</p>
+                            </div>
+                        </div>
+                        <div class="relative pb-5">
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
+                            <div class="pl-4">
+                                <p class="text-sm font-medium text-zinc-800"><code class="text-xs bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded font-mono">.slidd</code> export &amp; import</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Portable JSON project bundle for both editor types — export and re-import anytime</p>
+                            </div>
+                        </div>
+                        <div class="relative pb-5">
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
+                            <div class="pl-4">
+                                <p class="text-sm font-medium text-zinc-800">Galaxy Space — infinite canvas editor</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Pan, zoom, drag nodes, draw bezier edge connections — text, code, and sticky note blocks</p>
+                            </div>
+                        </div>
+                        <div class="relative pb-5">
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
+                            <div class="pl-4">
+                                <p class="text-sm font-medium text-zinc-800">Image blocks in Galaxy</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Upload images directly onto the canvas — resizable, connectable, persisted as base64</p>
                             </div>
                         </div>
                         <div class="relative">
                             <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white ring-1 ring-emerald-300"></div>
                             <div class="pl-4">
-                                <p class="text-sm font-medium text-zinc-800"><code class="text-xs bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded font-mono">.slidd</code> export &amp; import</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Portable JSON project bundle — export from editor, import to dashboard</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Planned</span>
-                        <div class="flex-1 h-px bg-zinc-100"></div>
-                    </div>
-                    <div class="relative pl-5 border-l border-zinc-150 space-y-0" style="border-color: #e4e4e7;">
-                        <div class="relative pb-5">
-                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-zinc-300"></div>
-                            <div class="pl-4">
-                                <p class="text-sm text-zinc-500">Galaxy Space — infinite canvas</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Pannable blocks, connectable edges, freeform layout</p>
-                            </div>
-                        </div>
-                        <div class="relative pb-5">
-                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-zinc-300"></div>
-                            <div class="pl-4">
-                                <p class="text-sm text-zinc-500">PDF export</p>
-                                <p class="text-xs text-zinc-400 mt-0.5">Print-ready slide output from the editor</p>
+                                <p class="text-sm font-medium text-zinc-800">Galaxy public preview</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Full interactive canvas view for shared Galaxy projects — pan, zoom, read-only</p>
                             </div>
                         </div>
                     </div>
