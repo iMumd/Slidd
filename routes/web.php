@@ -15,7 +15,11 @@ Route::get('/s/{slug}', function (string $slug) {
         'slides'        => fn($q) => $q->orderBy('order_index'),
         'slides.blocks' => fn($q) => $q->orderBy('order_index'),
         'user',
-    ])->where('slug', $slug)->firstOrFail();
+    ])->where('slug', $slug)->first();
+
+    if (! $project) {
+        return response(view('share.not-found'), 404);
+    }
 
     if ($project->type === 'galaxy') {
         $slide      = $project->slides->first();
