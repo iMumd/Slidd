@@ -28,9 +28,12 @@ Route::get('/s/{slug}', function (string $slug) {
                 'y'           => $b->position['y']   ?? 100,
                 'w'           => $b->dimensions['w']  ?? 300,
                 'h'           => $b->dimensions['h']  ?? 180,
-                'content'     => $b->type === 'code'
-                                    ? ($b->content['code'] ?? '')
-                                    : ($b->content['html'] ?? ''),
+                'content'     => match ($b->type) {
+                                    'code'  => $b->content['code'] ?? '',
+                                    'image' => '',
+                                    default => $b->content['html'] ?? '',
+                                 },
+                'src'         => $b->type === 'image' ? ($b->content['src'] ?? '') : '',
                 'color'       => $b->meta['color']   ?? '#ffffff',
                 'title'       => $b->meta['title']   ?? '',
                 'detectedLang'=> $b->content['lang'] ?? '',

@@ -155,6 +155,30 @@
         .gv-note-body { padding: 12px 14px; overflow: hidden; }
         .gv-note-content { font-size: .875rem; line-height: 1.7; color: rgba(0,0,0,.72); word-break: break-word; }
 
+        .gv-image-node {
+            background: #0d0e14;
+            border: 1px solid rgba(255,255,255,.1);
+            overflow: hidden;
+            box-shadow: 0 6px 28px rgba(0,0,0,.6), 0 18px 56px rgba(0,0,0,.35);
+        }
+        .gv-image-node:hover {
+            box-shadow: 0 0 0 1.5px rgba(99,102,241,.3), 0 10px 40px rgba(0,0,0,.7), 0 0 60px rgba(99,102,241,.08);
+        }
+        .gv-image-header {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 12px 6px;
+            background: rgba(0,0,0,.45);
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            border-radius: 14px 14px 0 0;
+            flex-shrink: 0;
+        }
+        .gv-image-title {
+            font-size: 10px; font-weight: 600; color: rgba(255,255,255,.3);
+            flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .gv-image-body { flex: 1; overflow: hidden; position: relative; display: flex; }
+        .gv-image-body img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; user-select: none; border-radius: 0 0 14px 14px; }
+
         /* ── Rich content (ul/ol inside node body) ──────────────── */
         .gv-rich ul { list-style-type: disc;    list-style-position: outside; padding-left: 1.25rem; margin-bottom: .4rem; }
         .gv-rich ol { list-style-type: decimal; list-style-position: outside; padding-left: 1.25rem; margin-bottom: .4rem; }
@@ -319,7 +343,7 @@
                      :style="`
                         left:${node.x}px; top:${node.y}px;
                         width:${node.w}px;
-                        min-height:${node.h}px;
+                        ${node.type === 'image' ? 'height' : 'min-height'}:${node.h}px;
                         z-index:${node.z ?? 1};
                         animation-delay:${idx * 40}ms;
                         ${node.type === 'note' ? 'background:' + node.color + ';' : ''}
@@ -373,6 +397,28 @@
                             </div>
                             <div class="gv-note-body" style="flex:1;">
                                 <div class="gv-note-content gv-rich" x-html="node.content || '<span style=\'opacity:.4\'>Empty note</span>'"></div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="node.type === 'image'">
+                        <div style="display:contents;">
+                            <div class="gv-image-header">
+                                <svg class="w-3 h-3 shrink-0" style="color:rgba(255,255,255,.3)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                                </svg>
+                                <span class="gv-image-title" x-text="node.title || 'Image'"></span>
+                            </div>
+                            <div class="gv-image-body">
+                                <template x-if="node.src">
+                                    <img :src="node.src" draggable="false">
+                                </template>
+                                <template x-if="!node.src">
+                                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.18);">
+                                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                                        <span style="font-size:10px;">No image</span>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </template>

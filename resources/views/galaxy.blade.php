@@ -131,6 +131,29 @@
         .note-editable { user-select: text; }
         .note-editable:empty::before { content: 'Add a note…'; color: rgba(0,0,0,.3); pointer-events: none; }
 
+        /* ── Image node ─────────────────────────────────────────── */
+        .image-node { background: #0d0e14; border: 1px solid rgba(255,255,255,.1); overflow: hidden; }
+        .image-node .g-node-header { background: rgba(0,0,0,.45); border-bottom: 1px solid rgba(255,255,255,.06); }
+        .image-node .g-node-body { overflow: hidden; position: relative; display: flex; }
+        .image-node img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; user-select: none; }
+        .image-upload-zone {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer;
+            border: 1.5px dashed rgba(255,255,255,.12);
+            border-radius: 0 0 12px 12px;
+            color: rgba(255,255,255,.3);
+            transition: background .15s, border-color .15s, color .15s;
+        }
+        .image-upload-zone:hover { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.28); color: rgba(255,255,255,.55); }
+        .image-replace-overlay {
+            position: absolute; inset: 0; opacity: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,.5); cursor: pointer;
+            transition: opacity .2s;
+        }
+        .image-node .g-node-body:hover .image-replace-overlay { opacity: 1; }
+
         .g-anchor {
             position: absolute;
             width: 12px; height: 12px; border-radius: 50%;
@@ -437,6 +460,9 @@
             <button class="tool-btn" title="Sticky note" @click="addNode('note')">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/></svg>
             </button>
+            <button class="tool-btn" title="Image block" @click="addNode('image')">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+            </button>
 
             <div class="tool-sep"></div>
 
@@ -487,7 +513,7 @@
             <template x-for="node in nodes" :key="node.id">
                 <div class="g-node"
                      :class="[node.type + '-node', { selected: selectedNodeId === node.id, 'link-source': _linkSource === node.id }]"
-                     :style="`left:${node.x}px; top:${node.y}px; width:${node.w}px; min-height:${node.h}px; z-index:${node.z ?? 1};`"
+                     :style="`left:${node.x}px; top:${node.y}px; width:${node.w}px; ${node.type === 'image' ? 'height' : 'min-height'}:${node.h}px; z-index:${node.z ?? 1};`"
                      :data-node-id="node.id"
                      @mousedown.stop="selectNode(node.id)"
                      @click.capture="linkClickCapture(node.id, $event)">
@@ -583,6 +609,35 @@
                                      @input="node.content = $event.target.innerHTML; $nextTick(() => _drawEdges())"
                                      @mousedown.stop @click.stop>
                                 </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="node.type === 'image'">
+                        <div style="display:contents;">
+                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)">
+                                <svg class="w-3 h-3 shrink-0" style="color:rgba(255,255,255,.35)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                                <input type="text" class="node-title" style="color:rgba(255,255,255,.4);" x-model="node.title" placeholder="Image…"
+                                       @mousedown.stop @click.stop @keydown.enter.prevent="$el.blur()" @keydown.escape.prevent="$el.blur()">
+                                <button @click.stop="deleteNode(node.id)" class="node-close-btn node-close-dark" title="Delete">
+                                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="g-node-body" @click.stop="!node.src && openImagePicker(node.id)">
+                                <template x-if="!node.src">
+                                    <div class="image-upload-zone">
+                                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                                        <span style="font-size:11px; font-weight:500;">Click to add image</span>
+                                    </div>
+                                </template>
+                                <template x-if="node.src">
+                                    <div style="position:relative; width:100%; height:100%;">
+                                        <img :src="node.src" draggable="false">
+                                        <div class="image-replace-overlay" @click.stop="openImagePicker(node.id)">
+                                            <span style="font-size:11px; font-weight:600; color:#fff; background:rgba(0,0,0,.5); padding:4px 12px; border-radius:99px;">Replace</span>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </template>
@@ -1203,16 +1258,17 @@
                 const cx = vp ? (vp.offsetWidth  / 2 - this.panX) / this.zoom : 0;
                 const cy = vp ? (vp.offsetHeight / 2 - this.panY) / this.zoom : 0;
 
-                const sizes = { text: [300,180], code: [440,240], note: [240,200] };
+                const sizes = { text: [300,180], code: [440,240], note: [240,200], image: [320,240] };
                 const [w, h] = sizes[type] ?? [300, 180];
 
-                const defaultTitles = { text: 'Text block', code: 'Code block', note: 'Note' };
+                const defaultTitles = { text: 'Text block', code: 'Code block', note: 'Note', image: 'Image' };
                 const node = {
                     id: this._uid(), type,
                     title: defaultTitles[type] ?? '',
                     x: cx - w/2, y: cy - h/2, w, h,
                     content: '', color: type === 'note' ? '#fef9c3' : '#ffffff',
                     detectedLang: '', highlighted: '', isEditing: false,
+                    src: '',
                     z: this._topZ() + 1,
                 };
                 this.nodes.push(node);
@@ -1685,6 +1741,7 @@
                                 w: n.w,  h: n.h,
                                 content: n.content, color: n.color,
                                 detectedLang: n.detectedLang ?? '',
+                                src: n.src ?? '',
                             })),
                             edges: this.edges,
                         }),
@@ -1702,6 +1759,23 @@
                 }
             },
 
+            openImagePicker(nodeId) {
+                const input   = document.createElement('input');
+                input.type    = 'file';
+                input.accept  = 'image/*';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const node = this.nodes.find(n => n.id === nodeId);
+                        if (node) { node.src = ev.target.result; this._isDirty = true; }
+                    };
+                    reader.readAsDataURL(file);
+                };
+                input.click();
+            },
+
             exportSlidd() {
                 const payload = {
                     version : 1,
@@ -1712,6 +1786,7 @@
                         x: n.x, y: n.y, w: n.w, h: n.h,
                         content: n.content, color: n.color ?? null,
                         detectedLang: n.detectedLang ?? '',
+                        src: n.src ?? '',
                     })),
                     edges   : this.edges,
                 };
