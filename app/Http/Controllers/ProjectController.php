@@ -45,7 +45,7 @@ class ProjectController extends Controller
             $allIds = collect($savedNodes)->pluck('id')->filter();
             $nextId = $allIds->isEmpty() ? 1 : ($allIds->max() + 1);
 
-            return view('galaxy', compact('project', 'savedNodes', 'savedEdges', 'nextId'));
+            return view('editor.galaxy', compact('project', 'savedNodes', 'savedEdges', 'nextId'));
         }
 
         // ── Solid Text ────────────────────────────────────────────
@@ -67,7 +67,7 @@ class ProjectController extends Controller
         ));
         $nextId = $allIds->filter()->isEmpty() ? 3 : ($allIds->max() + 1);
 
-        return view('editor', compact('project', 'savedSlides', 'nextId'));
+        return view('editor.slides', compact('project', 'savedSlides', 'nextId'));
     }
 
     public function store(Request $request): JsonResponse

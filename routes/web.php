@@ -6,10 +6,10 @@ use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('pages.welcome');
 });
 
-Route::get('/introduction', fn() => view('introduction'))->name('introduction');
+Route::get('/introduction', fn() => view('pages.introduction'))->name('introduction');
 Route::get('/s/{slug}', function (string $slug) {
     $project = Project::with([
         'slides'        => fn($q) => $q->orderBy('order_index'),
@@ -41,7 +41,7 @@ Route::get('/s/{slug}', function (string $slug) {
             ])->values()->all()
             : [];
 
-        return view('galaxy-preview', compact('project', 'savedNodes', 'savedEdges'));
+        return view('share.galaxy', compact('project', 'savedNodes', 'savedEdges'));
     }
 
     $slides = $project->slides->map(fn($slide) => [
@@ -53,7 +53,7 @@ Route::get('/s/{slug}', function (string $slug) {
         ])->values()->all(),
     ])->values()->all();
 
-    return view('preview', compact('project', 'slides'));
+    return view('share.slides', compact('project', 'slides'));
 })->name('project.preview');
 
 Route::get('/privacy', fn() => view('legal.privacy'))->name('privacy');
@@ -68,7 +68,7 @@ Route::get('/dashboard', function () {
         ])
         ->latest()
         ->get();
-    return view('dashboard', compact('projects'));
+    return view('app.dashboard', compact('projects'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
