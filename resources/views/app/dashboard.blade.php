@@ -25,6 +25,8 @@
             return 'Good night';
         },
 
+        fabOpen: false,
+
         showToast: false,
         toastLoading: false,
         toastError: false,
@@ -168,35 +170,17 @@
         },
     }"
     @click.window="openDropdown = null"
-    @keydown.escape.window="closeModal(); closeRename(); closeDelete(); openDropdown = null;"
+    @keydown.escape.window="closeModal(); closeRename(); closeDelete(); openDropdown = null; fabOpen = false;"
 >
 
     <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 md:px-10 py-10">
 
-    <div class="flex items-start justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900" x-text="greeting + ', {{ Auth::user()->name }}.'"></h1>
-            <p class="text-sm text-gray-400 mt-1">Here's what you've been working on.</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <input type="file" x-ref="sliddImport" accept=".slidd" class="hidden" @change="importSlidd($event)">
-            <button
-                @click="$refs.sliddImport.click()"
-                class="flex items-center gap-1.5 text-sm font-medium text-gray-500 border border-gray-200 hover:border-gray-300 hover:text-slate-900 py-2 px-4 rounded-lg transition-colors"
-            >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
-                </svg>
-                Import .slidd
-            </button>
-            <button
-                @click="openModal()"
-                class="bg-slate-900 text-white text-sm font-medium py-2 px-4 rounded-lg shadow-sm hover:bg-slate-800 transition-colors"
-            >
-                + Create New Project
-            </button>
-        </div>
+    <div>
+        <h1 class="text-2xl font-bold text-slate-900" x-text="greeting + ', {{ Auth::user()->name }}.'"></h1>
+        <p class="text-sm text-gray-400 mt-1">Here's what you've been working on.</p>
     </div>
+
+    <input type="file" x-ref="sliddImport" accept=".slidd" class="hidden" @change="importSlidd($event)">
 
     <div class="relative" style="min-height:calc(100vh - 11rem);">
 
@@ -503,6 +487,66 @@
         <svg x-show="!toastLoading && !toastError" class="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
         <svg x-show="toastError" class="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
         <span class="text-sm font-medium" :class="toastError ? 'text-red-700' : 'text-slate-900'" x-text="toastMessage"></span>
+    </div>
+
+    {{-- FAB --}}
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3" @click.away="fabOpen = false">
+
+        {{-- Speed-dial options --}}
+        <div
+            x-show="fabOpen"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-3 scale-95"
+            class="flex flex-col items-end gap-2.5"
+            style="display:none;"
+        >
+            {{-- Create New Project --}}
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold text-slate-700 bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-md whitespace-nowrap select-none">
+                    Create New Project
+                </span>
+                <button
+                    @click="fabOpen = false; openModal()"
+                    class="w-12 h-12 rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 transition-colors flex items-center justify-center shrink-0"
+                >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Import .slidd --}}
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold text-slate-600 bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-md whitespace-nowrap select-none">
+                    Import .slidd
+                </span>
+                <button
+                    @click="fabOpen = false; $refs.sliddImport.click()"
+                    class="w-12 h-12 rounded-full bg-white border border-gray-200 text-gray-600 shadow-lg hover:border-gray-300 hover:text-slate-900 transition-colors flex items-center justify-center shrink-0"
+                >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Main FAB --}}
+        <button
+            @click="fabOpen = !fabOpen"
+            class="w-14 h-14 rounded-full bg-slate-900 text-white shadow-xl hover:bg-slate-800 transition-all duration-200 flex items-center justify-center"
+            :class="fabOpen ? 'rotate-45' : ''"
+            style="box-shadow: 0 8px 24px rgba(0,0,0,.22), 0 2px 8px rgba(0,0,0,.14);"
+        >
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+            </svg>
+        </button>
+
     </div>
 
 </div>

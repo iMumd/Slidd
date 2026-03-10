@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="p-10">
+<div class="p-4 sm:p-6 md:p-10">
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-slate-900">Settings</h1>
         <p class="text-sm text-gray-400 mt-1">Manage your account and preferences.</p>

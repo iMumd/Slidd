@@ -7,11 +7,36 @@
     <title>@yield('title', config('app.name', 'Slidd'))</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-white antialiased flex min-h-screen" style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
+<body class="bg-white antialiased min-h-screen" style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
 
-    <aside class="w-64 border-r border-gray-100 flex flex-col shrink-0 min-h-screen">
-        <div class="p-6">
+<div class="flex min-h-screen" x-data="{ sidebarOpen: false }">
+
+    {{-- Mobile overlay --}}
+    <div
+        x-show="sidebarOpen"
+        @click="sidebarOpen = false"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-black/30 z-40 md:hidden"
+        style="display:none;"
+    ></div>
+
+    {{-- Sidebar --}}
+    <aside
+        class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col shrink-0 transition-transform duration-200 ease-in-out md:relative md:translate-x-0"
+        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+    >
+        <div class="p-6 flex items-center justify-between">
             <a href="{{ route('dashboard') }}" class="font-bold text-xl text-slate-900 tracking-tight">Slidd</a>
+            <button @click="sidebarOpen = false" class="md:hidden p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
         </div>
 
         <nav class="flex-1 px-0 space-y-0.5 mt-1">
@@ -43,9 +68,25 @@
         </div>
     </aside>
 
-    <main class="flex-1">
-        @yield('content')
-    </main>
+    {{-- Main content --}}
+    <div class="flex-1 flex flex-col min-w-0">
+
+        {{-- Mobile top bar --}}
+        <div class="md:hidden flex items-center h-14 px-4 border-b border-gray-100 bg-white shrink-0">
+            <button @click="sidebarOpen = true" class="p-1.5 rounded-lg text-gray-400 hover:text-slate-900 hover:bg-gray-100 transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                </svg>
+            </button>
+            <a href="{{ route('dashboard') }}" class="ml-3 font-bold text-xl text-slate-900 tracking-tight">Slidd</a>
+        </div>
+
+        <main class="flex-1">
+            @yield('content')
+        </main>
+    </div>
+
+</div>
 
 </body>
 </html>

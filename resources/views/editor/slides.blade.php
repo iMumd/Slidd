@@ -78,39 +78,39 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
                 </svg>
             </button>
-            <span class="text-sm font-semibold text-slate-900 truncate max-w-xs">{{ $project->title }}</span>
+            <span class="text-sm font-semibold text-slate-900 truncate max-w-[120px] sm:max-w-xs">{{ $project->title }}</span>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 sm:gap-2">
 
             {{-- Shortcuts guide --}}
             <button @click="isShortcutsModalOpen = true"
                     title="Keyboard shortcuts"
-                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-gray-400 hover:text-slate-700 hover:bg-gray-100 transition-colors group">
+                    class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-gray-400 hover:text-slate-700 hover:bg-gray-100 transition-colors group">
                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
                     <rect x="2" y="6" width="20" height="13" rx="2.5" stroke="currentColor" stroke-width="1.75" fill="none"/>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M10 14h.01M14 14h4"/>
                 </svg>
-                <span class="text-xs font-medium">Shortcuts</span>
+                <span class="hidden sm:inline text-xs font-medium">Shortcuts</span>
             </button>
 
             {{-- Save --}}
             <button @click="saveProject()"
                     :disabled="isSaving"
-                    class="flex items-center gap-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg transition-colors">
+                    class="flex items-center gap-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/></svg>
-                <span x-text="isSaving ? 'Saving...' : 'Save'"></span>
+                <span class="hidden sm:inline" x-text="isSaving ? 'Saving...' : 'Save'"></span>
             </button>
 
             {{-- Share --}}
             <div class="relative">
                 <button @click="shareOpen = !shareOpen"
                         :class="shareOpen ? 'bg-gray-100 text-slate-900' : 'text-gray-500 hover:text-slate-900 hover:bg-gray-100'"
-                        class="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                        class="flex items-center gap-1.5 text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/>
                     </svg>
-                    Share
+                    <span class="hidden sm:inline">Share</span>
                 </button>
 
                 <div x-show="shareOpen"
@@ -121,7 +121,7 @@
                      x-transition:leave-start="opacity-100 translate-y-0"
                      x-transition:leave-end="opacity-0 -translate-y-1"
                      @click.outside="shareOpen = false"
-                     class="absolute right-0 top-full mt-2 w-80 rounded-2xl z-[999] overflow-hidden"
+                     class="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl z-[999] overflow-hidden"
                      style="display:none; background:#fff; border:1px solid #e5e7eb; box-shadow:0 20px 60px rgba(0,0,0,.12), 0 4px 16px rgba(0,0,0,.06);">
 
                     {{-- Header --}}
@@ -175,11 +175,11 @@
 
             {{-- Export --}}
             <button @click="exportSlidd()"
-                    class="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                    class="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-slate-900 px-2.5 sm:px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                 </svg>
-                Export .slidd
+                <span class="hidden sm:inline">Export .slidd</span>
             </button>
 
         </div>
@@ -188,7 +188,7 @@
     <div class="flex" style="height:calc(100vh - 3.5rem);">
 
         {{-- Slide panel (dynamic) --}}
-        <aside class="w-56 flex flex-col shrink-0 overflow-hidden" style="background:#f0f0f0; border-right:1px solid #e2e2e2;">
+        <aside class="w-36 sm:w-48 md:w-56 flex flex-col shrink-0 overflow-hidden" style="background:#f0f0f0; border-right:1px solid #e2e2e2;">
 
             {{-- Header --}}
             <div class="flex items-center justify-between px-4 pt-4 pb-3">
