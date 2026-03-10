@@ -69,7 +69,7 @@
                 <div class="flex-1 flex justify-center">
                     <div class="bg-white rounded-md h-6 w-52 border border-zinc-200/80 flex items-center justify-center gap-1.5 px-3">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-                        <span class="text-[10px] text-zinc-400 font-medium">slidd.io/deck/my-talk</span>
+                        <span class="text-[10px] text-zinc-400 font-medium">slidd.app/editor/my-talk</span>
                     </div>
                 </div>
             </div>

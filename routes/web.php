@@ -89,7 +89,7 @@ Route::get('/dashboard', function () {
     return view('app.dashboard', compact('projects'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::post('/projects/import', [ProjectController::class, 'import'])->name('projects.import');
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
