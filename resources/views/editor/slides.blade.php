@@ -66,6 +66,10 @@
         .txt-block li { margin-bottom: 0.2rem; }
         .txt-block li::marker { color: inherit; font-family: inherit; }
 
+        /* toolbar scroll — hide scrollbar on all browsers */
+        .toolbar-inner { scrollbar-width: none; -ms-overflow-style: none; }
+        .toolbar-inner::-webkit-scrollbar { display: none; }
+
     </style>
 </head>
 <body class="h-full antialiased"
@@ -491,10 +495,9 @@
     </div>
 
     <div x-show="showToolbar"
-         :style="`top:${toolbarY}px; left:${toolbarX}px`"
-         class="fixed z-50 -translate-x-1/2 -translate-y-full pb-2"
+         :style="`position:fixed; z-index:50; top:${toolbarY}px; left:${toolbarX}px; transform:translateX(-50%) ${toolbarFlipped ? 'translateY(0.375rem)' : 'translateY(-100%) translateY(-0.5rem)'}; max-width:calc(100vw - 16px);`"
          style="display:none;">
-        <div class="backdrop-blur-md bg-white/95 shadow-xl border border-gray-200 rounded-lg p-1.5 flex gap-0.5 items-center flex-wrap max-w-2xl">
+        <div class="toolbar-inner backdrop-blur-md bg-white/95 shadow-xl border border-gray-200 rounded-lg p-1.5 flex gap-0.5 items-center flex-wrap">
 
             <div class="relative" @click.away="isFontMenuOpen = false">
                 <button @mousedown.prevent="isFontMenuOpen = !isFontMenuOpen"
@@ -507,7 +510,7 @@
                 <div x-show="isFontMenuOpen"
                      x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                      x-transition:leave="transition ease-in duration-75"   x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                     class="absolute top-full left-0 mt-1 w-36 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg py-1 z-50 flex flex-col"
+                     class="absolute top-full left-0 mt-1 w-36 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg py-1 z-[70] flex flex-col"
                      style="display:none;">
                     <template x-for="font in ['Arial', 'Cairo', 'Tajawal', 'Lotus', 'JetBrains Mono']" :key="font">
                         <button @mouseenter="_previewConfirmed = false; previewFont(font)"
@@ -532,7 +535,7 @@
                 <div x-show="isFontSizeMenuOpen"
                      x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                      x-transition:leave="transition ease-in duration-75"   x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                     class="absolute top-full left-0 mt-1 w-24 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg py-1 z-50 flex flex-col max-h-56 overflow-y-auto"
+                     class="absolute top-full left-0 mt-1 w-24 bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-lg py-1 z-[70] flex flex-col max-h-56 overflow-y-auto"
                      style="display:none;">
                     <template x-for="size in ['8px','10px','12px','14px','16px','18px','20px','24px','30px','36px','48px','64px']" :key="size">
                         <button @mouseenter="_previewConfirmed = false; previewFontSize(size)"
@@ -921,6 +924,7 @@ function editor() {
         },
 
         showToolbar         : false,
+        toolbarFlipped      : false,
         toolbarX            : 0,
         toolbarY            : 0,
         isFontMenuOpen      : false,
@@ -1301,9 +1305,25 @@ function editor() {
             }
             const rect = sel.getRangeAt(0).getBoundingClientRect();
             if (!rect || rect.width === 0) { this.showToolbar = false; return; }
-            this.toolbarX    = rect.left + rect.width / 2;
-            this.toolbarY    = rect.top;
-            this.showToolbar = true;
+
+            const vpW      = window.innerWidth;
+            const PAD      = 8;
+            const tbW      = Math.min(540, vpW - PAD * 2);   // toolbar rendered width (scrollable)
+            const TOOLBAR_H = 52;                              // approximate toolbar height
+            const HEADER_H  = 56;                              // editor header height
+
+            // clamp X so toolbar never overflows left/right edge
+            let cx = rect.left + rect.width / 2;
+            cx = Math.max(tbW / 2 + PAD, Math.min(cx, vpW - tbW / 2 - PAD));
+
+            // flip below selection when there isn't enough room above
+            const spaceAbove = rect.top - HEADER_H - PAD;
+            const flipped    = spaceAbove < TOOLBAR_H;
+
+            this.toolbarX       = cx;
+            this.toolbarY       = flipped ? rect.bottom : rect.top;
+            this.toolbarFlipped = flipped;
+            this.showToolbar    = true;
         },
 
         formatText(command, value = null) {
