@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Sign in — Slidd</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#f4f4f5">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><text y='74' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='700' fill='white'>S</text></svg>">
+    <link rel="icon" href="/favicon.ico" sizes="any">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full antialiased flex items-center justify-center px-4 py-12" style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:#f4f4f5;">

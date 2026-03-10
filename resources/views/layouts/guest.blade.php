@@ -4,10 +4,46 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>@yield('title', 'Slidd — Minimal presentation workspace')</title>
+    <meta name="description" content="@yield('description', 'Build beautiful presentations like you write code. A minimal, developer-first slides tool with an infinite Galaxy canvas.')">
+    <meta name="keywords" content="@yield('keywords', 'presentation builder, slides, developer tools, infinite canvas, galaxy space')">
+    <meta name="author" content="Slidd">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="color-scheme" content="light">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="{{ config('app.name', 'Slidd') }}">
+    <meta property="og:url" content="@yield('canonical', url()->current())">
+    <meta property="og:title" content="@yield('title', 'Slidd — Minimal presentation workspace')">
+    <meta property="og:description" content="@yield('description', 'Build beautiful presentations like you write code. A minimal, developer-first slides tool with an infinite Galaxy canvas.')">
+    <meta property="og:image" content="@yield('og_image', asset('og-image.png'))">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="@yield('title', 'Slidd')">
+    <meta property="og:locale" content="{{ app()->getLocale() }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', 'Slidd — Minimal presentation workspace')">
+    <meta name="twitter:description" content="@yield('description', 'Build beautiful presentations like you write code.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('og-image.png'))">
+    <meta name="twitter:image:alt" content="@yield('title', 'Slidd')">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><text y='74' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='700' fill='white'>S</text></svg>">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    <link rel="manifest" href="/manifest.json">
+
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @stack('head')
+
     <style>
         *, body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
     </style>

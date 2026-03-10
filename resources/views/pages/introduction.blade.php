@@ -1,6 +1,8 @@
 @extends('layouts.guest')
 
 @section('title', 'Introduction — Slidd')
+@section('description', 'Learn how Slidd works — a developer-first presentation builder with a Notion-like slide editor and an infinite Galaxy canvas for visual thinking.')
+@section('canonical', url('/introduction'))
 
 @section('content')
 

@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Private application routes — do not crawl
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /profile
+Disallow: /password
+Disallow: /projects
+
+Sitemap: https://slidd.app/sitemap.xml

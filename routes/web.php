@@ -60,6 +60,20 @@ Route::get('/privacy', fn() => view('legal.privacy'))->name('privacy');
 Route::get('/terms', fn() => view('legal.terms'))->name('terms');
 Route::get('/security', fn() => view('legal.security'))->name('security');
 
+Route::get('/sitemap.xml', function () {
+    $lastmod = now()->toDateString();
+    $urls = [
+        ['loc' => url('/'),             'changefreq' => 'weekly',  'priority' => '1.0', 'lastmod' => $lastmod],
+        ['loc' => url('/introduction'), 'changefreq' => 'monthly', 'priority' => '0.8', 'lastmod' => $lastmod],
+        ['loc' => url('/privacy'),      'changefreq' => 'yearly',  'priority' => '0.2', 'lastmod' => $lastmod],
+        ['loc' => url('/terms'),        'changefreq' => 'yearly',  'priority' => '0.2', 'lastmod' => $lastmod],
+        ['loc' => url('/security'),     'changefreq' => 'yearly',  'priority' => '0.2', 'lastmod' => $lastmod],
+    ];
+    return response()
+        ->view('sitemap', compact('urls'))
+        ->header('Content-Type', 'application/xml; charset=utf-8');
+})->name('sitemap');
+
 Route::get('/dashboard', function () {
     $projects = auth()->user()->projects()
         ->with([

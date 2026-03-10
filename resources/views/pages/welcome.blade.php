@@ -1,6 +1,31 @@
 @extends('layouts.guest')
 
 @section('title', 'Slidd — Build slides like you write code')
+@section('description', 'A minimal, developer-first presentation builder. Write slides like code with a Notion-like editor and an infinite Galaxy canvas for visual thinking.')
+@section('canonical', url('/'))
+
+@push('head')
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@@type": "WebApplication",
+    "name": "Slidd",
+    "url": "{{ url('/') }}",
+    "description": "A minimal, developer-first presentation builder with an infinite Galaxy canvas.",
+    "applicationCategory": "ProductivityApplication",
+    "operatingSystem": "Web",
+    "offers": {
+        "@@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+    },
+    "author": {
+        "@@type": "Organization",
+        "name": "Slidd"
+    }
+}
+</script>
+@endpush
 
 @section('content')
 
