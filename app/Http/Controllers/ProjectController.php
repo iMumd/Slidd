@@ -16,6 +16,36 @@ class ProjectController extends Controller
         $project = Project::where('slug', $slug)->firstOrFail();
         abort_if($project->user_id !== $request->user()->id, 403);
 
+        // ── Galaxy Space ──────────────────────────────────────────
+        if ($project->type === 'galaxy') {
+            $slide      = $project->slides()->first();
+            $savedEdges = $slide ? ($slide->meta['edges'] ?? []) : [];
+            $savedNodes = $slide
+                ? $slide->blocks()->orderBy('order_index')->get()->map(fn($b) => [
+                    'id'          => $b->meta['node_id'] ?? $b->id,
+                    'type'        => $b->type,
+                    'x'           => $b->position['x']    ?? 100,
+                    'y'           => $b->position['y']    ?? 100,
+                    'w'           => $b->dimensions['w']  ?? 300,
+                    'h'           => $b->dimensions['h']  ?? 180,
+                    'content'     => $b->type === 'code'
+                                        ? ($b->content['code'] ?? '')
+                                        : ($b->content['html'] ?? ''),
+                    'color'       => $b->meta['color']    ?? '#ffffff',
+                    'title'       => $b->meta['title']    ?? '',
+                    'detectedLang'=> $b->content['lang']  ?? '',
+                    'highlighted' => '',
+                    'isEditing'   => false,
+                ])->values()->all()
+                : [];
+
+            $allIds = collect($savedNodes)->pluck('id')->filter();
+            $nextId = $allIds->isEmpty() ? 1 : ($allIds->max() + 1);
+
+            return view('galaxy', compact('project', 'savedNodes', 'savedEdges', 'nextId'));
+        }
+
+        // ── Solid Text ────────────────────────────────────────────
         $savedSlides = $project->slides()->orderBy('order_index')->get()->map(fn($slide) => [
             'id'     => $slide->id,
             'blocks' => $slide->blocks()->orderBy('order_index')->get()->map(fn($b) => [
@@ -28,7 +58,6 @@ class ProjectController extends Controller
             ])->values()->all(),
         ])->values()->all();
 
-        // Compute max ID across all slides and blocks for _nextId seeding
         $allIds = collect($savedSlides)->flatMap(fn($s) => array_merge(
             [$s['id']],
             array_column($s['blocks'], 'id')
@@ -201,6 +230,49 @@ class ProjectController extends Controller
             }
 
             return response()->json(['redirect_url' => route('editor.show', $project->slug)]);
+        } catch (Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function saveGalaxy(Request $request, Project $project): JsonResponse
+    {
+        try {
+            abort_if($project->user_id !== $request->user()->id, 403);
+
+            $nodes = $request->input('nodes', []);
+            $edges = $request->input('edges', []);
+
+            foreach ($project->slides as $slide) {
+                $slide->blocks()->delete();
+            }
+            $project->slides()->delete();
+
+            $slide = $project->slides()->create([
+                'title'       => 'Galaxy Canvas',
+                'type'        => SlideType::GalaxySpace,
+                'order_index' => 0,
+                'meta'        => ['edges' => $edges],
+            ]);
+
+            foreach ($nodes as $i => $node) {
+                $type    = $node['type'] ?? 'text';
+                $content = match ($type) {
+                    'code'  => ['code' => $node['content'] ?? '', 'lang' => $node['detectedLang'] ?? ''],
+                    default => ['html' => $node['content'] ?? ''],
+                };
+
+                $slide->blocks()->create([
+                    'type'        => $type,
+                    'content'     => $content,
+                    'order_index' => $i,
+                    'position'    => ['x' => $node['x'] ?? 0,   'y' => $node['y'] ?? 0],
+                    'dimensions'  => ['w' => $node['w'] ?? 300, 'h' => $node['h'] ?? 180],
+                    'meta'        => ['color' => $node['color'] ?? '#ffffff', 'title' => $node['title'] ?? '', 'node_id' => $node['id'] ?? null],
+                ]);
+            }
+
+            return response()->json(['ok' => true]);
         } catch (Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

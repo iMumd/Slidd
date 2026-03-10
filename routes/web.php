@@ -17,6 +17,30 @@ Route::get('/s/{slug}', function (string $slug) {
         'user',
     ])->where('slug', $slug)->firstOrFail();
 
+    if ($project->type === 'galaxy') {
+        $slide      = $project->slides->first();
+        $savedEdges = $slide ? ($slide->meta['edges'] ?? []) : [];
+        $savedNodes = $slide
+            ? $slide->blocks->map(fn($b) => [
+                'id'          => $b->meta['node_id'] ?? $b->id,
+                'type'        => $b->type,
+                'x'           => $b->position['x']   ?? 100,
+                'y'           => $b->position['y']   ?? 100,
+                'w'           => $b->dimensions['w']  ?? 300,
+                'h'           => $b->dimensions['h']  ?? 180,
+                'content'     => $b->type === 'code'
+                                    ? ($b->content['code'] ?? '')
+                                    : ($b->content['html'] ?? ''),
+                'color'       => $b->meta['color']   ?? '#ffffff',
+                'title'       => $b->meta['title']   ?? '',
+                'detectedLang'=> $b->content['lang'] ?? '',
+                'highlighted' => '',
+            ])->values()->all()
+            : [];
+
+        return view('galaxy-preview', compact('project', 'savedNodes', 'savedEdges'));
+    }
+
     $slides = $project->slides->map(fn($slide) => [
         'id'     => $slide->id,
         'blocks' => $slide->blocks->map(fn($b) => [
@@ -51,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::get('/editor/{slug}', [ProjectController::class, 'show'])->name('editor.show');
     Route::post('/editor/{project}/save', [ProjectController::class, 'save'])->name('editor.save');
+    Route::post('/editor/{project}/save-galaxy', [ProjectController::class, 'saveGalaxy'])->name('editor.save-galaxy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
