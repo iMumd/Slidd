@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $project->title }} — Galaxy Slidd</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><text y='74' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='700' fill='white'>S</text></svg>">
+    <link rel="icon" href="/favicon.ico" sizes="any">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
@@ -17,9 +19,36 @@
             -webkit-backdrop-filter: blur(24px);
             border-bottom: 1px solid rgba(255, 255, 255, .07);
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 1rem;
+            padding: 0 0.75rem;
             position: relative; z-index: 60;
             flex-shrink: 0;
+        }
+        .gv-hdr-left  { display: flex; align-items: center; gap: 0.5rem; min-width: 0; overflow: hidden; }
+        .gv-hdr-right { display: flex; align-items: center; gap: 0.375rem; flex-shrink: 0; }
+        .gv-hdr-title {
+            font-size: .875rem; font-weight: 600; color: rgba(255,255,255,.8);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            max-width: 120px; flex-shrink: 1;
+        }
+        .gv-hdr-badge-galaxy { display: none; }
+        .gv-hdr-badge-view   { display: none; }
+        .gv-hdr-sep-sm       { display: none; }
+        .gv-hdr-author-name  { display: none; }
+        .gv-hdr-sep-md       { display: none; }
+        .gv-hdr-made-with    { display: none; }
+        @media (min-width: 640px) {
+            .gv-header          { padding: 0 1rem; }
+            .gv-hdr-left        { gap: 0.75rem; }
+            .gv-hdr-right       { gap: 0.625rem; }
+            .gv-hdr-title       { max-width: 20rem; }
+            .gv-hdr-badge-galaxy { display: inline-flex; }
+            .gv-hdr-badge-view   { display: inline-flex; }
+            .gv-hdr-sep-sm       { display: block; }
+        }
+        @media (min-width: 768px) {
+            .gv-hdr-author-name { display: flex; }
+            .gv-hdr-sep-md      { display: block; }
+            .gv-hdr-made-with   { display: inline-flex; }
         }
 
         #gv-viewport {
@@ -31,6 +60,7 @@
             background: #08090d;
             cursor: grab;
             user-select: none;
+            touch-action: none;
         }
         #gv-viewport.panning { cursor: grabbing; }
 
@@ -192,7 +222,7 @@
         }
 
         .gv-ctrl-panel {
-            position: absolute; left: 16px; bottom: 24px; z-index: 50;
+            position: absolute; left: 12px; bottom: 16px; z-index: 50;
             background: rgba(15, 17, 23, .92);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255,255,255,.08);
@@ -201,12 +231,14 @@
             display: flex; align-items: center; gap: 2px;
             box-shadow: 0 8px 32px rgba(0,0,0,.5);
         }
+        @media (min-width: 640px) { .gv-ctrl-panel { left: 16px; bottom: 24px; } }
         .gv-ctrl-btn {
-            width: 32px; height: 32px; border-radius: 8px;
+            width: 40px; height: 40px; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
             color: rgba(255,255,255,.45); cursor: pointer;
             transition: background .15s, color .15s;
         }
+        @media (min-width: 640px) { .gv-ctrl-btn { width: 32px; height: 32px; } }
         .gv-ctrl-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
         .gv-zoom-val {
             font-size: 10px; font-weight: 700; color: rgba(255,255,255,.3);
@@ -263,46 +295,44 @@
 
     <header class="gv-header">
 
-        <div class="flex items-center gap-3 min-w-0">
-            <a href="/" class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors shrink-0"
-               style="background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);"
+        <div class="gv-hdr-left">
+            <a href="/" style="display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:8px;flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-decoration:none;"
                onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='rgba(255,255,255,.05)'">
-                <span class="text-sm font-bold text-white/80 tracking-tight">S</span>
+                <span style="font-size:.875rem;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:-.025em;">S</span>
             </a>
-            <span class="text-white/20 select-none">/</span>
-            <span class="text-sm font-semibold text-white/80 truncate max-w-[200px] sm:max-w-xs">{{ $project->title }}</span>
-            <span class="gv-badge-galaxy hidden sm:inline-flex">
-                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <span style="color:rgba(255,255,255,.2);user-select:none;flex-shrink:0;">/</span>
+            <span class="gv-hdr-title">{{ $project->title }}</span>
+            <span class="gv-badge-galaxy gv-hdr-badge-galaxy">
+                <svg style="width:10px;height:10px;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
                 </svg>
                 Galaxy
             </span>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="gv-hdr-right">
 
-            <span class="gv-badge-view hidden sm:inline-flex">
-                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <span class="gv-badge-view gv-hdr-badge-view">
+                <svg style="width:12px;height:12px;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 View only
             </span>
 
-            <div class="w-px h-4 hidden sm:block" style="background:rgba(255,255,255,.08)"></div>
+            <div class="gv-hdr-sep-sm" style="width:1px;height:16px;background:rgba(255,255,255,.08);"></div>
 
-            {{-- Author --}}
-            <div class="flex items-center gap-2">
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                 <div class="gv-avatar">{{ strtoupper(substr($project->user->name, 0, 1)) }}</div>
-                <div class="hidden md:flex flex-col leading-none gap-0.5">
-                    <span class="text-[10px] font-medium" style="color:rgba(255,255,255,.25)">Created by</span>
-                    <span class="text-xs font-semibold" style="color:rgba(255,255,255,.65)">{{ $project->user->name }}</span>
+                <div class="gv-hdr-author-name" style="flex-direction:column;line-height:1;gap:2px;">
+                    <span style="font-size:10px;font-weight:500;color:rgba(255,255,255,.25);">Created by</span>
+                    <span style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,.65);">{{ $project->user->name }}</span>
                 </div>
             </div>
 
-            <div class="w-px h-4 hidden md:block" style="background:rgba(255,255,255,.08)"></div>
+            <div class="gv-hdr-sep-md" style="width:1px;height:16px;background:rgba(255,255,255,.08);"></div>
 
-            <a href="/" class="gv-made-with hidden md:inline-flex">
+            <a href="/" class="gv-made-with gv-hdr-made-with">
                 <span class="gv-made-with-dot"></span>
                 Made with Slidd
             </a>
@@ -489,7 +519,85 @@
 
                     setTimeout(() => this.fitToContent(), 80);
                     this._drawEdges();
+                    this._initTouch();
                 });
+            },
+
+            _initTouch() {
+                let _t1 = null, _t2 = null;
+                let _panStart    = null;
+                let _pinchBase   = null, _touchZoomBase = 1, _touchMidBase = null;
+                let _velX = 0, _velY = 0, _lastTime = 0, _inertiaRaf = null;
+                const vp = this.$refs.viewport;
+
+                window.addEventListener('touchstart', e => {
+                    cancelAnimationFrame(_inertiaRaf);
+                    _t1 = e.touches[0];
+                    _t2 = e.touches.length >= 2 ? e.touches[1] : null;
+                    if (_t2) {
+                        _pinchBase     = Math.hypot(_t2.clientX - _t1.clientX, _t2.clientY - _t1.clientY);
+                        _touchZoomBase = this.zoom;
+                        _touchMidBase  = { mx: (_t1.clientX + _t2.clientX) / 2, my: (_t1.clientY + _t2.clientY) / 2, panX: this.panX, panY: this.panY };
+                        _panStart = null;
+                    } else {
+                        _panStart  = { sx: _t1.clientX, sy: _t1.clientY, spx: this.panX, spy: this.panY };
+                        _pinchBase = null;
+                        _velX = 0; _velY = 0; _lastTime = performance.now();
+                    }
+                    e.preventDefault();
+                }, { passive: false });
+
+                window.addEventListener('touchmove', e => {
+                    _t1 = e.touches[0];
+                    _t2 = e.touches.length >= 2 ? e.touches[1] : null;
+                    const rect = vp.getBoundingClientRect();
+                    if (_t2 && _pinchBase) {
+                        const dist    = Math.hypot(_t2.clientX - _t1.clientX, _t2.clientY - _t1.clientY);
+                        const newZoom = Math.min(4, Math.max(0.08, _touchZoomBase * (dist / _pinchBase)));
+                        const curMidX = (_t1.clientX + _t2.clientX) / 2 - rect.left;
+                        const curMidY = (_t1.clientY + _t2.clientY) / 2 - rect.top;
+                        const baseMidX = _touchMidBase.mx - rect.left;
+                        const baseMidY = _touchMidBase.my - rect.top;
+                        this.panX = baseMidX - (baseMidX - _touchMidBase.panX) * (newZoom / _touchZoomBase) + (curMidX - baseMidX);
+                        this.panY = baseMidY - (baseMidY - _touchMidBase.panY) * (newZoom / _touchZoomBase) + (curMidY - baseMidY);
+                        this.zoom = newZoom;
+                        this._drawEdges();
+                    } else if (_panStart) {
+                        const now = performance.now();
+                        const dt  = Math.max(now - _lastTime, 1);
+                        const nx  = _panStart.spx + (_t1.clientX - _panStart.sx);
+                        const ny  = _panStart.spy + (_t1.clientY - _panStart.sy);
+                        _velX = (nx - this.panX) / dt * 16;
+                        _velY = (ny - this.panY) / dt * 16;
+                        this.panX = nx; this.panY = ny; _lastTime = now;
+                        this._drawEdges();
+                    }
+                    e.preventDefault();
+                }, { passive: false });
+
+                const endTouch = e => {
+                    if (e.touches.length === 0) {
+                        if (_panStart && (Math.abs(_velX) > 0.4 || Math.abs(_velY) > 0.4)) {
+                            const run = () => {
+                                _velX *= 0.92; _velY *= 0.92;
+                                this.panX += _velX; this.panY += _velY;
+                                this._drawEdges();
+                                if (Math.abs(_velX) > 0.3 || Math.abs(_velY) > 0.3) _inertiaRaf = requestAnimationFrame(run);
+                            };
+                            _inertiaRaf = requestAnimationFrame(run);
+                        }
+                        _panStart = null; _pinchBase = null; _t1 = null; _t2 = null;
+                    } else if (e.touches.length === 1) {
+                        _t1 = e.touches[0]; _t2 = null; _pinchBase = null;
+                        _panStart = { sx: _t1.clientX, sy: _t1.clientY, spx: this.panX, spy: this.panY };
+                        _velX = 0; _velY = 0; _lastTime = performance.now();
+                    }
+                };
+                window.addEventListener('touchend',    endTouch, { passive: false });
+                window.addEventListener('touchcancel', () => {
+                    cancelAnimationFrame(_inertiaRaf);
+                    _panStart = null; _pinchBase = null; _t1 = null; _t2 = null; _velX = 0; _velY = 0;
+                }, { passive: false });
             },
 
             _drawEdges() {
