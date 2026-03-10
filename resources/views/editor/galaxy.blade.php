@@ -21,6 +21,7 @@
             background-size: 28px 28px;
             cursor: default;
             user-select: none;
+            touch-action: none;
         }
         #galaxy-canvas {
             position: absolute;
@@ -182,6 +183,21 @@
         .g-node:hover .g-resize { opacity: 0.7; }
         .g-node.selected .g-resize { opacity: 1; }
         .g-resize:hover { opacity: 1 !important; }
+
+        /* Larger touch targets on touch devices */
+        @media (pointer: coarse) {
+            .g-anchor { width: 20px; height: 20px; border-width: 3px; }
+            .g-anchor.top    { top: -10px; }
+            .g-anchor.right  { right: -10px; }
+            .g-anchor.bottom { bottom: -10px; }
+            .g-anchor.left   { left: -10px; }
+            .g-anchor.top:hover    { transform: translateX(-50%) scale(1.2); }
+            .g-anchor.right:hover  { transform: translateY(-50%) scale(1.2); }
+            .g-anchor.bottom:hover { transform: translateX(-50%) scale(1.2); }
+            .g-anchor.left:hover   { transform: translateY(-50%) scale(1.2); }
+            .g-resize { width: 44px; height: 44px; padding: 10px; }
+            .g-node-header { padding: 12px 12px 10px; min-height: 44px; }
+        }
 
         .tool-panel {
             position: absolute;
@@ -471,9 +487,7 @@
          @mousedown="onViewportMousedown($event)"
          @click="onViewportClick($event)"
          @wheel.prevent="onWheel($event)"
-         @touchstart.prevent="onViewportTouchstart($event)"
-         @touchmove.prevent="onViewportTouchmove($event)"
-         @touchend="onViewportTouchend($event)">
+         @touchstart.prevent="onViewportTouchstart($event)">
 
         <div class="tool-panel" @mousedown.stop>
 
@@ -1156,6 +1170,10 @@
             _touchZoomBase : 1,
             _touchMidBase  : null,
             _touchCount    : 0,
+            _touchVelX     : 0,
+            _touchVelY     : 0,
+            _touchLastTime : 0,
+            _inertiaRaf    : null,
 
             isSaving         : false,
             showToast        : false,
@@ -1208,6 +1226,11 @@
                     e.preventDefault();
                     e.returnValue = '';
                 });
+
+                // Global touch handlers registered with passive:false so preventDefault works
+                window.addEventListener('touchmove',   (e) => { if (this._pan || this._drag || this._resize || this._touchCount >= 2) e.preventDefault(); this.onGlobalTouchmove(e); }, { passive: false });
+                window.addEventListener('touchend',    (e) => this.onGlobalTouchend(e));
+                window.addEventListener('touchcancel', (e) => this.onGlobalTouchcancel(e));
             },
 
             _drawEdges() {
@@ -1561,6 +1584,10 @@
             // ── Touch support ─────────────────────────────────────
             onViewportTouchstart(e) {
                 if (this.isShortcutsOpen || this.showExitModal) return;
+                cancelAnimationFrame(this._inertiaRaf);
+                this._touchVelX = 0;
+                this._touchVelY = 0;
+
                 if (e.touches.length === 1) {
                     this._touchCount = 1;
                     const t = e.touches[0];
@@ -1568,14 +1595,16 @@
                         this._blurActive();
                         this.selectedNodeId = null;
                         this.selectedEdgeId = null;
+                        this._drag = this._resize = null;
                         this._pan = { sx: t.clientX, sy: t.clientY, spx: this.panX, spy: this.panY };
+                        this._touchLastTime = Date.now();
                     }
                 } else if (e.touches.length === 2) {
+                    // Transition 1→2: freeze current pan state as the pinch base
                     this._touchCount = 2;
-                    this._pan  = null;
-                    this._drag = null;
+                    this._drag = this._pan = null;
                     const t1 = e.touches[0], t2 = e.touches[1];
-                    this._touchDistBase = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+                    this._touchDistBase = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY) || 1;
                     this._touchZoomBase = this.zoom;
                     this._touchMidBase  = {
                         panX: this.panX, panY: this.panY,
@@ -1585,61 +1614,118 @@
                 }
             },
 
-            onViewportTouchmove(e) {
+            onGlobalTouchmove(e) {
                 if (this.isShortcutsOpen || this.showExitModal) return;
                 const vp   = this.$refs.viewport;
                 const rect = vp?.getBoundingClientRect();
+                if (!rect) return;
+
+                if (e.touches.length >= 2 && this._touchMidBase) {
+                    // ── Pinch-to-zoom with live midpoint tracking ──
+                    const t1 = e.touches[0], t2 = e.touches[1];
+                    const curDist  = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY) || 1;
+                    const newZoom  = Math.min(4, Math.max(0.08, this._touchZoomBase * (curDist / this._touchDistBase)));
+
+                    // Live midpoint of fingers
+                    const curMidX  = ((t1.clientX + t2.clientX) / 2) - rect.left;
+                    const curMidY  = ((t1.clientY + t2.clientY) / 2) - rect.top;
+                    // Base midpoint captured at pinch start
+                    const baseMidX = this._touchMidBase.mx - rect.left;
+                    const baseMidY = this._touchMidBase.my - rect.top;
+
+                    // Zoom around base midpoint, then translate by finger drift
+                    this.panX = baseMidX - (baseMidX - this._touchMidBase.panX) * (newZoom / this._touchZoomBase) + (curMidX - baseMidX);
+                    this.panY = baseMidY - (baseMidY - this._touchMidBase.panY) * (newZoom / this._touchZoomBase) + (curMidY - baseMidY);
+                    this.zoom = newZoom;
+                    this._drawEdges();
+                    return;
+                }
+
                 if (e.touches.length === 1 && this._touchCount <= 1) {
-                    const t = e.touches[0];
+                    const t   = e.touches[0];
+                    const now = Date.now();
+
                     if (this._pan) {
-                        this.panX = this._pan.spx + (t.clientX - this._pan.sx);
-                        this.panY = this._pan.spy + (t.clientY - this._pan.sy);
+                        // ── Canvas pan with velocity tracking for inertia ──
+                        const newPanX = this._pan.spx + (t.clientX - this._pan.sx);
+                        const newPanY = this._pan.spy + (t.clientY - this._pan.sy);
+                        const dt = now - this._touchLastTime;
+                        if (dt > 0) {
+                            this._touchVelX = (newPanX - this.panX) / dt * 16;
+                            this._touchVelY = (newPanY - this.panY) / dt * 16;
+                        }
+                        this.panX = newPanX;
+                        this.panY = newPanY;
+                        this._touchLastTime = now;
                         if (this.edges.length) this._drawEdges();
-                    } else if (this._drag && rect) {
+
+                    } else if (this._drag) {
+                        // ── Node drag ──
                         const node = this.nodes.find(n => n.id === this._drag.nodeId);
                         if (node) {
                             node.x = (t.clientX - rect.left - this.panX) / this.zoom - this._drag.ox;
                             node.y = (t.clientY - rect.top  - this.panY) / this.zoom - this._drag.oy;
                             if (this.edges.length) this._drawEdges();
                         }
+
                     } else if (this._resize) {
+                        // ── Node resize ──
                         const node = this.nodes.find(n => n.id === this._resize.nodeId);
                         if (node) {
                             node.w = Math.max(160, this._resize.sw + (t.clientX - this._resize.sx) / this.zoom);
                             node.h = Math.max(80,  this._resize.sh + (t.clientY - this._resize.sy) / this.zoom);
                         }
                     }
-                } else if (e.touches.length === 2 && this._touchMidBase && rect) {
-                    const t1 = e.touches[0], t2 = e.touches[1];
-                    const dist     = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-                    const newZoom  = Math.min(4, Math.max(0.08, this._touchZoomBase * (dist / this._touchDistBase)));
-                    const mx = this._touchMidBase.mx - rect.left;
-                    const my = this._touchMidBase.my - rect.top;
-                    this.panX = mx - (mx - this._touchMidBase.panX) * (newZoom / this._touchZoomBase);
-                    this.panY = my - (my - this._touchMidBase.panY) * (newZoom / this._touchZoomBase);
-                    this.zoom = newZoom;
-                    this._drawEdges();
                 }
             },
 
-            onViewportTouchend(e) {
+            onGlobalTouchend(e) {
                 if (e.touches.length === 0) {
+                    // All fingers lifted — launch inertia if panning
+                    if (this._pan) this._startInertia();
                     this._pan = this._drag = this._resize = null;
                     this._touchMidBase = null;
                     this._touchCount   = 0;
                 } else if (e.touches.length === 1) {
+                    // One finger remains after pinch — resume pan from remaining finger
                     this._touchMidBase = null;
                     this._touchCount   = 1;
                     const t = e.touches[0];
                     this._pan = { sx: t.clientX, sy: t.clientY, spx: this.panX, spy: this.panY };
                     this._drag = this._resize = null;
+                    this._touchVelX = 0;
+                    this._touchVelY = 0;
+                    this._touchLastTime = Date.now();
                 }
+            },
+
+            onGlobalTouchcancel(e) {
+                cancelAnimationFrame(this._inertiaRaf);
+                this._pan = this._drag = this._resize = null;
+                this._touchMidBase = null;
+                this._touchCount   = 0;
+                this._touchVelX    = 0;
+                this._touchVelY    = 0;
+            },
+
+            _startInertia() {
+                cancelAnimationFrame(this._inertiaRaf);
+                const step = () => {
+                    this._touchVelX *= 0.93;
+                    this._touchVelY *= 0.93;
+                    if (Math.abs(this._touchVelX) < 0.4 && Math.abs(this._touchVelY) < 0.4) return;
+                    this.panX += this._touchVelX;
+                    this.panY += this._touchVelY;
+                    if (this.edges.length) this._drawEdges();
+                    this._inertiaRaf = requestAnimationFrame(step);
+                };
+                this._inertiaRaf = requestAnimationFrame(step);
             },
 
             onNodeTouchstart(id, e) {
                 if (e.touches.length !== 1) return;
                 e.stopPropagation();
-                this.selectNode(id);
+                cancelAnimationFrame(this._inertiaRaf);
                 const t    = e.touches[0];
                 const vp   = this.$refs.viewport;
                 const rect = vp?.getBoundingClientRect();
@@ -1650,12 +1736,16 @@
                     this._drag = { nodeId: id, ox: mx - node.x, oy: my - node.y };
                     this._pan  = null;
                     this._touchCount = 1;
+                    this._touchVelX  = 0;
+                    this._touchVelY  = 0;
                 }
+                this.selectNode(id);
             },
 
             onResizeTouchstart(id, e) {
                 if (e.touches.length !== 1) return;
                 e.stopPropagation();
+                cancelAnimationFrame(this._inertiaRaf);
                 const t    = e.touches[0];
                 const node = this.nodes.find(n => n.id === id);
                 if (node) {
