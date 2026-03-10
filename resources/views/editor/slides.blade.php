@@ -78,6 +78,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
                 </svg>
             </button>
+            {{-- Mobile slides panel toggle --}}
+            <button @click="panelOpen = !panelOpen"
+                    class="md:hidden flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
+                    :class="panelOpen ? 'bg-gray-100 text-slate-900' : 'text-gray-400'">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                </svg>
+            </button>
             <span class="text-sm font-semibold text-slate-900 truncate max-w-[120px] sm:max-w-xs">{{ $project->title }}</span>
         </div>
 
@@ -185,13 +193,31 @@
         </div>
     </header>
 
-    <div class="flex" style="height:calc(100vh - 3.5rem);">
+    <div class="flex relative" style="height:calc(100vh - 3.5rem);">
+
+        {{-- Mobile overlay backdrop --}}
+        <div x-show="panelOpen" @click="panelOpen = false"
+             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/25 z-30 md:hidden" style="display:none;"></div>
 
         {{-- Slide panel (dynamic) --}}
-        <aside class="w-36 sm:w-48 md:w-56 flex flex-col shrink-0 overflow-hidden" style="background:#f0f0f0; border-right:1px solid #e2e2e2;">
+        <aside class="fixed top-14 bottom-0 left-0 z-40 w-64 md:relative md:top-auto md:bottom-auto md:z-auto md:w-56 flex flex-col shrink-0 overflow-hidden transition-transform duration-200 ease-in-out"
+               :class="panelOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+               style="background:#f0f0f0; border-right:1px solid #e2e2e2;">
 
-            {{-- Header --}}
-            <div class="flex items-center justify-between px-4 pt-4 pb-3">
+            {{-- Mobile close button --}}
+            <div class="md:hidden flex items-center justify-between px-4 pt-3 pb-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">Slides</span>
+                <button @click="panelOpen = false" class="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Header (desktop only) --}}
+            <div class="hidden md:flex items-center justify-between px-4 pt-4 pb-3">
                 <span class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">Slides</span>
                 <span class="text-[10px] text-gray-400" x-text="slides.length"></span>
             </div>
@@ -199,7 +225,7 @@
             {{-- Slide list --}}
             <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-2.5">
                 <template x-for="(slide, index) in slides" :key="slide.id">
-                    <div @click="activeSlideId = slide.id"
+                    <div @click="activeSlideId = slide.id; panelOpen = false"
                          class="group/slide relative cursor-pointer select-none"
                          style="filter: drop-shadow(0 2px 6px rgba(0,0,0,.10));">
 
@@ -301,8 +327,8 @@
 
         {{-- Canvas --}}
         <main class="flex-1 overflow-y-auto" style="background:#f4f4f5;">
-            <div class="px-6">
-                <div class="bg-white border border-gray-200 shadow-lg rounded-md max-w-4xl mx-auto w-full min-h-[1056px] p-12 sm:p-16 mb-24 mt-8 relative cursor-text"
+            <div class="px-3 sm:px-6">
+                <div class="bg-white border border-gray-200 shadow-lg rounded-md max-w-4xl mx-auto w-full min-h-[500px] md:min-h-[1056px] p-4 sm:p-10 md:p-16 mb-16 md:mb-24 mt-4 md:mt-8 relative cursor-text"
                      @click.self="focusLastBlock()">
 
                     <template x-if="activeBlocks.length === 0">
@@ -332,8 +358,8 @@
                                  'opacity-40 scale-[0.98]': draggedBlockIndex === index
                              }">
 
-                            {{-- Drag handle --}}
-                            <div class="absolute -left-7 top-2 opacity-0 group-hover/block:opacity-100 transition-opacity
+                            {{-- Drag handle (desktop only) --}}
+                            <div class="hidden md:block absolute -left-7 top-2 opacity-0 group-hover/block:opacity-100 transition-opacity
                                         cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 z-10 select-none"
                                  @mousedown="_draggingFromHandle = true"
                                  @mouseup="_draggingFromHandle = false"
@@ -346,8 +372,8 @@
 
                             {{-- Delete handle --}}
                             <button @click="deleteBlock(block.id)"
-                                    class="absolute -right-9 top-2 opacity-0 group-hover/block:opacity-100 transition-opacity z-10
-                                           flex items-center justify-center w-6 h-6 rounded-md hover:bg-red-50 text-gray-300 hover:text-red-400">
+                                    class="absolute right-1 top-1 md:-right-9 md:top-2 opacity-60 md:opacity-0 group-hover/block:opacity-100 transition-opacity z-10
+                                           flex items-center justify-center w-6 h-6 rounded-md bg-white/80 md:bg-transparent hover:bg-red-50 text-gray-400 hover:text-red-400 shadow-sm md:shadow-none">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
@@ -668,7 +694,7 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
              x-transition:leave-end="opacity-0 scale-95 translate-y-2"
-             class="relative w-full max-w-md bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-2xl shadow-2xl overflow-hidden">
+             class="relative w-full max-w-md bg-white/95 backdrop-blur-xl border border-gray-200/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="max-height:min(90vh,calc(100dvh - 2rem));">
 
             {{-- Header --}}
             <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
@@ -693,7 +719,7 @@
             </div>
 
             {{-- Shortcut rows --}}
-            <div class="px-6 py-4 space-y-1">
+            <div class="px-6 py-4 space-y-1 overflow-y-auto flex-1" style="scrollbar-width:thin;scrollbar-color:#e2e8f0 transparent;">
 
                 {{-- Section: Formatting --}}
                 <p class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase mb-3">Formatting</p>
@@ -897,6 +923,7 @@ function editor() {
         currentFontName     : 'Arial',
         isFontSizeMenuOpen  : false,
         currentFontSize     : '16px',
+        panelOpen           : false,
         isSaving            : false,
         isHighlightMenuOpen : false,
         isTextColorMenuOpen   : false,

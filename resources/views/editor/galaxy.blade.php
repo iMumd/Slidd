@@ -34,7 +34,7 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             pointer-events: none;
-            z-index: 5;
+            z-index: 0;
         }
         .edge-hit {
             stroke: transparent;
@@ -310,6 +310,31 @@
             cursor: pointer; transition: background .15s, color .15s;
         }
         .exit-btn-stay:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+        @media (max-width: 640px) {
+            .tool-panel {
+                left: 50% !important;
+                top: auto !important;
+                bottom: 12px !important;
+                transform: translateX(-50%) !important;
+                flex-direction: row !important;
+                padding: 8px 10px !important;
+                border-radius: 20px !important;
+                min-width: auto !important;
+                gap: 0 !important;
+            }
+            .tool-sep {
+                width: 1px !important;
+                height: 24px !important;
+                margin: 0 4px !important;
+            }
+            .zoom-val {
+                writing-mode: horizontal-tb !important;
+                font-size: 9px !important;
+                padding: 0 4px;
+            }
+            .tool-btn { width: 34px; height: 34px; }
+        }
     </style>
 </head>
 <body class="h-full antialiased"
@@ -445,7 +470,10 @@
          :style="`background-position: ${panX % 28}px ${panY % 28}px`"
          @mousedown="onViewportMousedown($event)"
          @click="onViewportClick($event)"
-         @wheel.prevent="onWheel($event)">
+         @wheel.prevent="onWheel($event)"
+         @touchstart.prevent="onViewportTouchstart($event)"
+         @touchmove.prevent="onViewportTouchmove($event)"
+         @touchend="onViewportTouchend($event)">
 
         <div class="tool-panel" @mousedown.stop>
 
@@ -525,7 +553,7 @@
 
                     <template x-if="node.type === 'text'">
                         <div style="display:contents;">
-                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)">
+                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)" @touchstart.stop.prevent="onNodeTouchstart(node.id,$event)">
                                 <svg class="w-3 h-3 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/></svg>
                                 <input type="text" class="node-title text-gray-500" x-model="node.title" placeholder="Text block…"
                                        @mousedown.stop @click.stop @keydown.enter.prevent="$el.blur()" @keydown.escape.prevent="$el.blur()">
@@ -545,7 +573,7 @@
 
                     <template x-if="node.type === 'code'">
                         <div style="display:contents;">
-                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)">
+                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)" @touchstart.stop.prevent="onNodeTouchstart(node.id,$event)">
                                 <div class="mac-dot" style="background:#ff5f57;"></div>
                                 <div class="mac-dot" style="background:#febc2e;"></div>
                                 <div class="mac-dot" style="background:#28c840;"></div>
@@ -594,7 +622,7 @@
 
                     <template x-if="node.type === 'note'">
                         <div style="display:contents;">
-                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)" :style="`background:${darken(node.color)}`">
+                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)" @touchstart.stop.prevent="onNodeTouchstart(node.id,$event)" :style="`background:${darken(node.color)}`">
                                 <svg class="w-3 h-3 shrink-0" style="color:rgba(0,0,0,.4)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
                                 <input type="text" class="node-title" style="color:rgba(0,0,0,.5);" x-model="node.title" placeholder="Note…"
                                        @mousedown.stop @click.stop @keydown.enter.prevent="$el.blur()" @keydown.escape.prevent="$el.blur()">
@@ -615,7 +643,7 @@
 
                     <template x-if="node.type === 'image'">
                         <div style="display:contents;">
-                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)">
+                            <div class="g-node-header" @mousedown.stop="startDrag(node.id,$event)" @touchstart.stop.prevent="onNodeTouchstart(node.id,$event)">
                                 <svg class="w-3 h-3 shrink-0" style="color:rgba(255,255,255,.35)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
                                 <input type="text" class="node-title" style="color:rgba(255,255,255,.4);" x-model="node.title" placeholder="Image…"
                                        @mousedown.stop @click.stop @keydown.enter.prevent="$el.blur()" @keydown.escape.prevent="$el.blur()">
@@ -642,7 +670,7 @@
                         </div>
                     </template>
 
-                    <div class="g-resize" @mousedown.stop="startResize(node.id,$event)">
+                    <div class="g-resize" @mousedown.stop="startResize(node.id,$event)" @touchstart.stop.prevent="onResizeTouchstart(node.id,$event)">
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                             <path d="M9 1L1 9M9 5L5 9" stroke="rgba(0,0,0,.25)" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
@@ -907,16 +935,17 @@
         </div>
     </div>
 
-    <div class="shortcuts-overlay"
-         x-show="isShortcutsOpen"
+    <div x-show="isShortcutsOpen"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         @click.self="isShortcutsOpen = false"
+         class="fixed inset-0 z-[200] flex items-center justify-center p-4"
          style="display:none;">
+
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="isShortcutsOpen = false"></div>
 
         <div x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 scale-95 translate-y-2"
@@ -947,7 +976,7 @@
                 </button>
             </div>
 
-            <div class="sc-scroll px-6 py-4 space-y-1 overflow-y-auto" style="max-height:60vh;scrollbar-width:thin;scrollbar-color:#e2e8f0 transparent;">
+            <div class="sc-scroll px-6 py-4 space-y-1 overflow-y-auto" style="max-height:min(60vh,calc(100dvh - 12rem));scrollbar-width:thin;scrollbar-color:#e2e8f0 transparent;">
 
                 <p class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase mb-3">General</p>
 
@@ -1122,6 +1151,12 @@
             _isMidPan     : false,
             _edgeDrag     : null,  // { edgeId, end:'from'|'to', curX, curY, snapNodeId, snapAnchor }
 
+            // ── Touch state ──────────────────────────────────────
+            _touchDistBase : 0,
+            _touchZoomBase : 1,
+            _touchMidBase  : null,
+            _touchCount    : 0,
+
             isSaving         : false,
             showToast        : false,
             toastMsg         : '',
@@ -1153,8 +1188,9 @@
                         this.panX = vp.offsetWidth  / 2;
                         this.panY = vp.offsetHeight / 2;
                     }
-                    this.nodes.forEach(n => {
+                    this.nodes.forEach((n, i) => {
                         if (n.title === undefined) n.title = '';
+                        if (!n.z) n.z = i + 1;
                         this.highlightNode(n);
                     });
                     if (this.nodes.length > 0) this.fitToContent();
@@ -1272,7 +1308,7 @@
                     z: this._topZ() + 1,
                 };
                 this.nodes.push(node);
-                this.selectedNodeId = node.id;
+                this.selectNode(node.id);
             },
 
             deleteNode(id) {
@@ -1390,12 +1426,13 @@
             // ── Drag ──────────────────────────────────────────────
             startDrag(id, e) {
                 e.stopPropagation();
-                this.selectNode(id);
                 const vp   = this.$refs.viewport;
+                const rect = vp.getBoundingClientRect();
                 const node = this.nodes.find(n => n.id === id);
-                const mx   = (e.clientX - vp.getBoundingClientRect().left - this.panX) / this.zoom;
-                const my   = (e.clientY - vp.getBoundingClientRect().top  - this.panY) / this.zoom;
+                const mx   = (e.clientX - rect.left - this.panX) / this.zoom;
+                const my   = (e.clientY - rect.top  - this.panY) / this.zoom;
                 this._drag = { nodeId: id, ox: mx - node.x, oy: my - node.y };
+                this.selectNode(id);
             },
 
             // ── Resize ────────────────────────────────────────────
@@ -1518,6 +1555,114 @@
                 if (this._isDrawing && rect) {
                     this._drawCurX = e.clientX - rect.left;
                     this._drawCurY = e.clientY - rect.top;
+                }
+            },
+
+            // ── Touch support ─────────────────────────────────────
+            onViewportTouchstart(e) {
+                if (this.isShortcutsOpen || this.showExitModal) return;
+                if (e.touches.length === 1) {
+                    this._touchCount = 1;
+                    const t = e.touches[0];
+                    if (!e.target.closest('.g-node, .tool-panel')) {
+                        this._blurActive();
+                        this.selectedNodeId = null;
+                        this.selectedEdgeId = null;
+                        this._pan = { sx: t.clientX, sy: t.clientY, spx: this.panX, spy: this.panY };
+                    }
+                } else if (e.touches.length === 2) {
+                    this._touchCount = 2;
+                    this._pan  = null;
+                    this._drag = null;
+                    const t1 = e.touches[0], t2 = e.touches[1];
+                    this._touchDistBase = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+                    this._touchZoomBase = this.zoom;
+                    this._touchMidBase  = {
+                        panX: this.panX, panY: this.panY,
+                        mx: (t1.clientX + t2.clientX) / 2,
+                        my: (t1.clientY + t2.clientY) / 2,
+                    };
+                }
+            },
+
+            onViewportTouchmove(e) {
+                if (this.isShortcutsOpen || this.showExitModal) return;
+                const vp   = this.$refs.viewport;
+                const rect = vp?.getBoundingClientRect();
+                if (e.touches.length === 1 && this._touchCount <= 1) {
+                    const t = e.touches[0];
+                    if (this._pan) {
+                        this.panX = this._pan.spx + (t.clientX - this._pan.sx);
+                        this.panY = this._pan.spy + (t.clientY - this._pan.sy);
+                        if (this.edges.length) this._drawEdges();
+                    } else if (this._drag && rect) {
+                        const node = this.nodes.find(n => n.id === this._drag.nodeId);
+                        if (node) {
+                            node.x = (t.clientX - rect.left - this.panX) / this.zoom - this._drag.ox;
+                            node.y = (t.clientY - rect.top  - this.panY) / this.zoom - this._drag.oy;
+                            if (this.edges.length) this._drawEdges();
+                        }
+                    } else if (this._resize) {
+                        const node = this.nodes.find(n => n.id === this._resize.nodeId);
+                        if (node) {
+                            node.w = Math.max(160, this._resize.sw + (t.clientX - this._resize.sx) / this.zoom);
+                            node.h = Math.max(80,  this._resize.sh + (t.clientY - this._resize.sy) / this.zoom);
+                        }
+                    }
+                } else if (e.touches.length === 2 && this._touchMidBase && rect) {
+                    const t1 = e.touches[0], t2 = e.touches[1];
+                    const dist     = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+                    const newZoom  = Math.min(4, Math.max(0.08, this._touchZoomBase * (dist / this._touchDistBase)));
+                    const mx = this._touchMidBase.mx - rect.left;
+                    const my = this._touchMidBase.my - rect.top;
+                    this.panX = mx - (mx - this._touchMidBase.panX) * (newZoom / this._touchZoomBase);
+                    this.panY = my - (my - this._touchMidBase.panY) * (newZoom / this._touchZoomBase);
+                    this.zoom = newZoom;
+                    this._drawEdges();
+                }
+            },
+
+            onViewportTouchend(e) {
+                if (e.touches.length === 0) {
+                    this._pan = this._drag = this._resize = null;
+                    this._touchMidBase = null;
+                    this._touchCount   = 0;
+                } else if (e.touches.length === 1) {
+                    this._touchMidBase = null;
+                    this._touchCount   = 1;
+                    const t = e.touches[0];
+                    this._pan = { sx: t.clientX, sy: t.clientY, spx: this.panX, spy: this.panY };
+                    this._drag = this._resize = null;
+                }
+            },
+
+            onNodeTouchstart(id, e) {
+                if (e.touches.length !== 1) return;
+                e.stopPropagation();
+                this.selectNode(id);
+                const t    = e.touches[0];
+                const vp   = this.$refs.viewport;
+                const rect = vp?.getBoundingClientRect();
+                const node = this.nodes.find(n => n.id === id);
+                if (node && rect) {
+                    const mx = (t.clientX - rect.left - this.panX) / this.zoom;
+                    const my = (t.clientY - rect.top  - this.panY) / this.zoom;
+                    this._drag = { nodeId: id, ox: mx - node.x, oy: my - node.y };
+                    this._pan  = null;
+                    this._touchCount = 1;
+                }
+            },
+
+            onResizeTouchstart(id, e) {
+                if (e.touches.length !== 1) return;
+                e.stopPropagation();
+                const t    = e.touches[0];
+                const node = this.nodes.find(n => n.id === id);
+                if (node) {
+                    this._resize = { nodeId: id, sx: t.clientX, sy: t.clientY, sw: node.w, sh: node.h };
+                    this._drag   = null;
+                    this._pan    = null;
+                    this._touchCount = 1;
                 }
             },
 
