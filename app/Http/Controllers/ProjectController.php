@@ -11,6 +11,9 @@ use Throwable;
 
 class ProjectController extends Controller
 {
+    /** Valid block types accepted from the frontend. */
+    private const BLOCK_TYPES = ['text', 'code', 'image', 'note', 'heading', 'hr', 'divider'];
+
     public function show(Request $request, string $slug)
     {
         $project = Project::where('slug', $slug)->firstOrFail();
@@ -72,17 +75,22 @@ class ProjectController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        try {
-            $request->validate([
-                'title' => ['required', 'string', 'max:255'],
-                'type'  => ['required', 'in:slides,galaxy'],
-            ]);
+        // Validation runs outside try-catch so ValidationException propagates
+        // as a proper 422 response rather than being swallowed as 500.
+        $request->validate([
+            'title' => ['required', 'string', 'min:1', 'max:255'],
+            'type'  => ['required', 'in:slides,galaxy'],
+        ]);
 
+        try {
             $base  = trim($request->title);
             $title = $base;
             $i     = 1;
 
-            while (Project::where('user_id', $request->user()->id)->where('title', $title)->exists()) {
+            while (
+                $i <= 99 &&
+                Project::where('user_id', $request->user()->id)->where('title', $title)->exists()
+            ) {
                 $title = "{$base} ({$i})";
                 $i++;
             }
@@ -98,24 +106,26 @@ class ProjectController extends Controller
                 'redirect_url' => route('editor.show', $project->slug),
             ]);
         } catch (Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Could not create project.'], 500);
         }
     }
 
     public function update(Request $request, Project $project): JsonResponse
     {
+        abort_if($project->user_id !== $request->user()->id, 403);
+
+        $request->validate([
+            'title' => ['required', 'string', 'min:1', 'max:255'],
+        ]);
+
         try {
-            abort_if($project->user_id !== $request->user()->id, 403);
-
-            $request->validate([
-                'title' => ['required', 'string', 'max:255'],
-            ]);
-
             $base  = trim($request->title);
             $title = $base;
             $i     = 1;
 
             while (
+                $i <= 99 &&
                 Project::where('user_id', $request->user()->id)
                        ->where('title', $title)
                        ->where('id', '!=', $project->id)
@@ -129,22 +139,24 @@ class ProjectController extends Controller
 
             return response()->json(['title' => $project->fresh()->title]);
         } catch (Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Could not update project.'], 500);
         }
     }
 
     public function save(Request $request, Project $project): JsonResponse
     {
+        abort_if($project->user_id !== $request->user()->id, 403);
+
+        $request->validate([
+            'slides'                        => ['present', 'array', 'max:500'],
+            'slides.*.blocks'               => ['present', 'array', 'max:300'],
+            'slides.*.blocks.*.type'        => ['required', 'string', 'in:' . implode(',', self::BLOCK_TYPES)],
+            'slides.*.blocks.*.content'     => ['nullable', 'string', 'max:200000'],
+            'slides.*.blocks.*.detectedLang'=> ['nullable', 'string', 'max:50'],
+        ]);
+
         try {
-            abort_if($project->user_id !== $request->user()->id, 403);
-
-            $request->validate([
-                'slides'                   => ['present', 'array'],
-                'slides.*.blocks'          => ['present', 'array'],
-                'slides.*.blocks.*.type'   => ['required', 'string'],
-            ]);
-
-            // Delete all existing slides (blocks cascade via DB foreign key / Eloquent)
             foreach ($project->slides as $slide) {
                 $slide->blocks()->delete();
             }
@@ -176,27 +188,33 @@ class ProjectController extends Controller
 
             return response()->json(['ok' => true]);
         } catch (Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Could not save project.'], 500);
         }
     }
 
     public function import(Request $request): JsonResponse
     {
+        $request->validate([
+            'project'               => ['nullable', 'array'],
+            'project.title'         => ['nullable', 'string', 'max:255'],
+            'project.type'          => ['nullable', 'string', 'in:slides,galaxy'],
+            'slides'                => ['required', 'array', 'min:1', 'max:500'],
+            'slides.*.blocks'       => ['present', 'array', 'max:300'],
+            'slides.*.blocks.*.type'    => ['required', 'string', 'max:50'],
+            'slides.*.blocks.*.content' => ['nullable', 'string', 'max:200000'],
+        ]);
+
         try {
-            $data = $request->json()->all();
-
-            if (empty($data['slides']) || !is_array($data['slides'])) {
-                return response()->json(['error' => 'Invalid .slidd file.'], 422);
-            }
-
-            $baseTitle = trim($data['project']['title'] ?? 'Imported Project');
-            $type      = in_array($data['project']['type'] ?? '', ['slides', 'galaxy'])
-                ? $data['project']['type']
-                : 'slides';
+            $baseTitle = trim($request->input('project.title') ?? 'Imported Project') ?: 'Imported Project';
+            $type      = $request->input('project.type', 'slides');
 
             $title = $baseTitle;
             $i     = 1;
-            while (Project::where('user_id', $request->user()->id)->where('title', $title)->exists()) {
+            while (
+                $i <= 99 &&
+                Project::where('user_id', $request->user()->id)->where('title', $title)->exists()
+            ) {
                 $title = "{$baseTitle} ({$i})";
                 $i++;
             }
@@ -208,10 +226,12 @@ class ProjectController extends Controller
                 'type'    => $type,
             ]);
 
-            foreach ($data['slides'] as $slideIndex => $slideData) {
+            $slideType = $type === 'galaxy' ? SlideType::GalaxySpace : SlideType::SolidText;
+
+            foreach ($request->input('slides') as $slideIndex => $slideData) {
                 $slide = $project->slides()->create([
                     'title'       => 'Slide ' . ($slideIndex + 1),
-                    'type'        => SlideType::SolidText,
+                    'type'        => $slideType,
                     'order_index' => $slideIndex,
                 ]);
 
@@ -234,15 +254,34 @@ class ProjectController extends Controller
 
             return response()->json(['redirect_url' => route('editor.show', $project->slug)]);
         } catch (Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Could not import project.'], 500);
         }
     }
 
     public function saveGalaxy(Request $request, Project $project): JsonResponse
     {
-        try {
-            abort_if($project->user_id !== $request->user()->id, 403);
+        abort_if($project->user_id !== $request->user()->id, 403);
 
+        $request->validate([
+            'nodes'                         => ['present', 'array', 'max:500'],
+            'nodes.*.type'                  => ['required', 'string', 'in:text,code,image,note'],
+            'nodes.*.x'                     => ['required', 'numeric', 'between:-100000,100000'],
+            'nodes.*.y'                     => ['required', 'numeric', 'between:-100000,100000'],
+            'nodes.*.w'                     => ['required', 'numeric', 'min:10', 'max:5000'],
+            'nodes.*.h'                     => ['required', 'numeric', 'min:10', 'max:5000'],
+            'nodes.*.content'               => ['nullable', 'string', 'max:200000'],
+            'nodes.*.src'                   => ['nullable', 'string', 'max:5000000'],
+            'nodes.*.color'                 => ['nullable', 'string', 'max:50'],
+            'nodes.*.title'                 => ['nullable', 'string', 'max:255'],
+            'nodes.*.detectedLang'          => ['nullable', 'string', 'max:50'],
+            'edges'                         => ['present', 'array', 'max:2000'],
+            'edges.*.id'                    => ['required'],
+            'edges.*.from'                  => ['required'],
+            'edges.*.to'                    => ['required'],
+        ]);
+
+        try {
             $nodes = $request->input('nodes', []);
             $edges = $request->input('edges', []);
 
@@ -259,7 +298,7 @@ class ProjectController extends Controller
             ]);
 
             foreach ($nodes as $i => $node) {
-                $type    = $node['type'] ?? 'text';
+                $type    = $node['type'];
                 $content = match ($type) {
                     'code'  => ['code' => $node['content'] ?? '', 'lang' => $node['detectedLang'] ?? ''],
                     'image' => ['src'  => $node['src'] ?? ''],
@@ -272,24 +311,31 @@ class ProjectController extends Controller
                     'order_index' => $i,
                     'position'    => ['x' => $node['x'] ?? 0,   'y' => $node['y'] ?? 0],
                     'dimensions'  => ['w' => $node['w'] ?? 300, 'h' => $node['h'] ?? 180],
-                    'meta'        => ['color' => $node['color'] ?? '#ffffff', 'title' => $node['title'] ?? '', 'node_id' => $node['id'] ?? null],
+                    'meta'        => [
+                        'color'   => $node['color']   ?? '#ffffff',
+                        'title'   => $node['title']   ?? '',
+                        'node_id' => $node['id']      ?? null,
+                    ],
                 ]);
             }
 
             return response()->json(['ok' => true]);
         } catch (Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Could not save canvas.'], 500);
         }
     }
 
     public function destroy(Request $request, Project $project): JsonResponse
     {
+        abort_if($project->user_id !== $request->user()->id, 403);
+
         try {
-            abort_if($project->user_id !== $request->user()->id, 403);
             $project->delete();
             return response()->json(['ok' => true]);
         } catch (Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            report($e);
+            return response()->json(['error' => 'Could not delete project.'], 500);
         }
     }
 }
