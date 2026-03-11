@@ -9,7 +9,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <style>
-        /* ── shared blocks ──────────────────────────────────── */
         .code-view pre  { margin:0; border-radius:0; background:transparent!important; padding:0; }
         .code-view .hljs { background:transparent!important; padding:1.1rem 1.4rem; font-size:13.5px; line-height:1.7; white-space:pre-wrap; word-break:break-word; }
         .txt-block > div, .txt-block > p { margin:0; min-height:1em; }
@@ -18,7 +17,6 @@
         .txt-block li { margin-bottom:.2rem; }
         .txt-block li::marker { color:inherit; font-family:inherit; }
 
-        /* ── header ─────────────────────────────────────────── */
         .hdr {
             height: 3.5rem;
             background: #fff;
@@ -69,7 +67,6 @@
         .hdr-cta-long  { display: none; }
         .hdr-cta-short { display: inline; }
 
-        /* ── sm breakpoint (640px+) ─────────────────────────── */
         @media (min-width: 640px) {
             .hdr            { padding: 0 1rem; }
             .hdr-left       { gap: 0.75rem; }
@@ -81,19 +78,16 @@
             .hdr-cta-long   { display: inline; }
             .hdr-cta-short  { display: none; }
         }
-        /* ── md breakpoint (768px+) ─────────────────────────── */
         @media (min-width: 768px) {
             .hdr-author  { display: flex; align-items: center; gap: 8px; margin-right: 4px; }
             .hdr-divider { display: block; }
         }
 
-        /* ── sidebar ─────────────────────────────────────────── */
         .sv-sidebar { display: none; }
         @media (min-width: 640px) {
             .sv-sidebar { display: flex; flex-direction: column; flex-shrink: 0; width: 14rem; overflow: hidden; }
         }
 
-        /* ── mobile nav ──────────────────────────────────────── */
         .mobile-nav {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
             display: flex; align-items: center; justify-content: space-between;
@@ -109,7 +103,6 @@
         .mobile-nav-btn:not(:disabled) { color: #1e293b; }
         .mobile-nav-btn:not(:disabled):active { background: #f3f4f6; }
 
-        /* ── main canvas ─────────────────────────────────────── */
         .sv-main { flex: 1; overflow-y: auto; background: #f4f4f5; }
         .sv-canvas-wrap { padding: 12px; }
         .sv-canvas {
@@ -128,7 +121,6 @@
             .sv-canvas { padding: 4rem; }
         }
 
-        /* ── toast ───────────────────────────────────────────── */
         .toast-pos { bottom: 5rem; right: 1.25rem; }
         @media (min-width: 640px) { .toast-pos { bottom: 1.25rem; } }
     </style>
@@ -141,7 +133,6 @@
       @keydown.arrow-left.window="prevSlide()"
       x-init="init()">
 
-    {{-- ══ HEADER ═══════════════════════════════════════════════ --}}
     <header class="hdr">
 
         <div class="hdr-left">
@@ -194,10 +185,8 @@
         </div>
     </header>
 
-    {{-- ══ BODY ════════════════════════════════════════════════ --}}
     <div style="display:flex;height:calc(100vh - 3.5rem);">
 
-        {{-- ── Sidebar ─────────────────────────────────────────── --}}
         <aside class="sv-sidebar" style="background:#f0f0f0; border-right:1px solid #e2e2e2;">
 
             <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;">
@@ -263,7 +252,6 @@
             </div>
         </aside>
 
-        {{-- ── Canvas ──────────────────────────────────────────── --}}
         <main class="sv-main">
             <div class="sv-canvas-wrap">
                 <div class="sv-canvas">
@@ -311,7 +299,6 @@
 
     </div>
 
-    {{-- ══ MOBILE SLIDE NAV ══════════════════════════════════════ --}}
     <div class="mobile-nav">
         <button @click="prevSlide()" :disabled="current === 0" class="mobile-nav-btn">
             <svg style="width:16px;height:16px;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -331,7 +318,6 @@
         </button>
     </div>
 
-    {{-- ══ SHORTCUTS MODAL ═════════════════════════════════════ --}}
     <div x-show="isShortcutsOpen"
          x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
          x-transition:leave="transition ease-in duration-150"  x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
@@ -391,7 +377,6 @@
         </div>
     </div>
 
-    {{-- ══ TOAST ════════════════════════════════════════════════ --}}
     <div x-show="showToast"
          x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
          x-transition:leave="transition ease-in duration-150"  x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-1"

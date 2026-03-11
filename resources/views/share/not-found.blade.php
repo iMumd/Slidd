@@ -16,7 +16,6 @@
             color: rgba(255,255,255,.85);
         }
 
-        /* subtle nebula background */
         .nebula {
             position: fixed; inset: 0; z-index: 0; pointer-events: none;
             background:
@@ -24,7 +23,6 @@
                 radial-gradient(ellipse 40% 30% at 70% 70%, rgba(139,92,246,.05) 0%, transparent 60%);
         }
 
-        /* star dots */
         .stars {
             position: fixed; inset: 0; z-index: 0; pointer-events: none;
             background-image:

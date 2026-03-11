@@ -207,14 +207,40 @@
             flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .gv-image-body { flex: 1; overflow: hidden; position: relative; display: flex; }
-        .gv-image-body img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; user-select: none; border-radius: 0 0 14px 14px; }
+        .gv-image-body img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; border-radius: 0 0 14px 14px; }
 
-        /* ── Rich content (ul/ol inside node body) ──────────────── */
+        .gv-text-content,
+        .gv-note-content  { user-select: text; cursor: text; }
+        .gv-code-body pre,
+        .gv-code-body code { user-select: text; cursor: text; }
+
+        .gv-node-btn {
+            width: 22px; height: 22px; border-radius: 5px;
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; border: none; background: transparent; padding: 0;
+            flex-shrink: 0; opacity: 0;
+            transition: opacity .15s, background .15s;
+        }
+        .gv-node:hover .gv-node-btn { opacity: 1; }
+        .gv-text-node  .gv-node-btn:hover  { background: rgba(0,0,0,.08);   color: #475569; }
+        .gv-code-node  .gv-node-btn:hover  { background: rgba(255,255,255,.12); }
+        .gv-image-node .gv-node-btn:hover  { background: rgba(255,255,255,.12); }
+        .gv-note-node  .gv-node-btn:hover  { background: rgba(0,0,0,.08); }
+
+        .gv-toast {
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+            background: rgba(15,17,23,.95); border: 1px solid rgba(255,255,255,.12);
+            color: rgba(255,255,255,.85); font-size: .75rem; font-weight: 500;
+            padding: 7px 16px; border-radius: 8px; white-space: nowrap;
+            backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0,0,0,.5);
+            pointer-events: none; z-index: 200;
+            transition: opacity .2s;
+        }
+
         .gv-rich ul { list-style-type: disc;    list-style-position: outside; padding-left: 1.25rem; margin-bottom: .4rem; }
         .gv-rich ol { list-style-type: decimal; list-style-position: outside; padding-left: 1.25rem; margin-bottom: .4rem; }
         .gv-rich li { margin-bottom: .15rem; min-height: 1em; }
 
-        /* ── SVG edges ──────────────────────────────────────────── */
         #gv-svg {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
@@ -387,6 +413,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/>
                                 </svg>
                                 <span class="gv-text-title" x-text="node.title || 'Text'"></span>
+                                <button class="gv-node-btn" style="color:#94a3b8;" title="Copy text"
+                                        @mousedown.stop @click.stop="copyText(node.content)">
+                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/>
+                                    </svg>
+                                </button>
                             </div>
                             <div class="gv-text-body" style="flex:1;">
                                 <div class="gv-text-content gv-rich" x-html="node.content || '<span style=\'color:#d1d5db\'>Empty block</span>'"></div>
@@ -402,6 +434,12 @@
                                 <div class="gv-mac-dot" style="background:#28c840;"></div>
                                 <span class="gv-code-title" x-text="node.title || ''"></span>
                                 <span x-show="node.detectedLang" x-text="node.detectedLang" class="gv-code-lang"></span>
+                                <button class="gv-node-btn" style="color:rgba(255,255,255,.45);" title="Copy code"
+                                        @mousedown.stop @click.stop="copyCode(node.content)">
+                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/>
+                                    </svg>
+                                </button>
                             </div>
                             <div class="gv-code-body" style="flex:1;">
                                 <template x-if="node.highlighted">
@@ -424,6 +462,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
                                 </svg>
                                 <span class="gv-note-title" x-text="node.title || 'Note'"></span>
+                                <button class="gv-node-btn" style="color:rgba(0,0,0,.35);" title="Copy note"
+                                        @mousedown.stop @click.stop="copyText(node.content)">
+                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/>
+                                    </svg>
+                                </button>
                             </div>
                             <div class="gv-note-body" style="flex:1;">
                                 <div class="gv-note-content gv-rich" x-html="node.content || '<span style=\'opacity:.4\'>Empty note</span>'"></div>
@@ -438,6 +482,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
                                 </svg>
                                 <span class="gv-image-title" x-text="node.title || 'Image'"></span>
+                                <button x-show="node.src" class="gv-node-btn" style="color:rgba(255,255,255,.45);" title="Save image"
+                                        @mousedown.stop @click.stop="downloadImage(node.src, node.title)">
+                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                    </svg>
+                                </button>
                             </div>
                             <div class="gv-image-body">
                                 <template x-if="node.src">
@@ -470,6 +520,8 @@
                 <p class="text-xs mt-1" style="color:rgba(255,255,255,.12)">Nothing has been added yet</p>
             </div>
         </div>
+
+        <div class="gv-toast" x-show="_toast" x-text="_toast" x-cloak></div>
 
         <div class="gv-ctrl-panel" @mousedown.stop>
             <button class="gv-ctrl-btn" title="Zoom in" @click="zoomStep(1.25)">
@@ -506,6 +558,8 @@
 
             _isPanning : false,
             _pan       : null,   // { sx, sy, spx, spy }
+            _toast     : '',
+            _toastTimer: null,
 
             init() {
                 this.$nextTick(() => {
@@ -757,6 +811,8 @@
                 const rect = vp.getBoundingClientRect();
                 if (e.clientX < rect.left || e.clientX > rect.right ||
                     e.clientY < rect.top  || e.clientY > rect.bottom) return;
+                // Don't pan when clicking inside selectable content areas
+                if (e.target.closest('.gv-text-body, .gv-note-body, .gv-code-body, .gv-image-body')) return;
                 this._isPanning = true;
                 this._pan = { sx: e.clientX, sy: e.clientY, spx: this.panX, spy: this.panY };
             },
@@ -779,6 +835,55 @@
                 const g = Math.max(0, (c>>8 &255) - 15);
                 const b = Math.max(0, (c     &255) - 15);
                 return `rgb(${r},${g},${b})`;
+            },
+
+            // ── Visitor actions ───────────────────────────────────
+            _showToast(msg) {
+                clearTimeout(this._toastTimer);
+                this._toast = msg;
+                this._toastTimer = setTimeout(() => { this._toast = ''; }, 2000);
+            },
+
+            copyText(html) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html || '';
+                const text = tmp.innerText.trim();
+                if (!text) return;
+                navigator.clipboard.writeText(text)
+                    .then(() => this._showToast('Copied!'))
+                    .catch(() => this._showToast('Copy failed'));
+            },
+
+            copyCode(content) {
+                if (!content?.trim()) return;
+                navigator.clipboard.writeText(content)
+                    .then(() => this._showToast('Code copied!'))
+                    .catch(() => this._showToast('Copy failed'));
+            },
+
+            downloadImage(src, title) {
+                if (!src) return;
+                if (src.startsWith('data:')) {
+                    const a = document.createElement('a');
+                    a.href = src;
+                    a.download = (title || 'image').replace(/[^a-z0-9_-]/gi, '_') + '.png';
+                    a.click();
+                    this._showToast('Downloading…');
+                } else {
+                    fetch(src)
+                        .then(r => r.blob())
+                        .then(blob => {
+                            const url = URL.createObjectURL(blob);
+                            const a   = document.createElement('a');
+                            a.href    = url;
+                            const ext = src.split('.').pop().split('?')[0] || 'png';
+                            a.download = (title || 'image').replace(/[^a-z0-9_-]/gi, '_') + '.' + ext;
+                            a.click();
+                            setTimeout(() => URL.revokeObjectURL(url), 5000);
+                            this._showToast('Downloading…');
+                        })
+                        .catch(() => this._showToast('Download failed'));
+                }
             },
         };
     }
