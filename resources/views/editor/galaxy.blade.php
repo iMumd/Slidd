@@ -1500,15 +1500,92 @@
 
             onWheel(e) {
                 if (this.isShortcutsOpen || this.showExitModal) return;
-                const factor   = e.deltaY < 0 ? 1.1 : 0.9;
-                const newZoom  = Math.min(4, Math.max(0.08, this.zoom * factor));
-                const rect     = this.$refs.viewport.getBoundingClientRect();
-                const mx = e.clientX - rect.left;
-                const my = e.clientY - rect.top;
-                this.panX = mx - (mx - this.panX) * (newZoom / this.zoom);
-                this.panY = my - (my - this.panY) * (newZoom / this.zoom);
-                this.zoom = newZoom;
+                e.ctrlKey ? this._wheelZoom(e) : this._wheelPan(e);
+            },
+
+            // ── Zoom: trackpad pinch (pixel-mode) = real-time exp curve;
+            //         mouse wheel (line-mode) = accumulate target → ease-out animate
+            _wheelZoom(e) {
+                const rect = this.$refs.viewport.getBoundingClientRect();
+                const mx   = e.clientX - rect.left;
+                const my   = e.clientY - rect.top;
+
+                if (e.deltaMode === 0) {
+                    // Trackpad pinch — continuous, proportional to gesture speed
+                    const factor  = Math.exp(-e.deltaY * 0.005);
+                    const newZoom = Math.min(4, Math.max(0.08, this.zoom * factor));
+                    this.panX = mx - (mx - this.panX) * (newZoom / this.zoom);
+                    this.panY = my - (my - this.panY) * (newZoom / this.zoom);
+                    this.zoom = newZoom;
+                    this._drawEdges();
+                } else {
+                    // Mouse wheel — smooth animated ease-out to accumulated target
+                    if (!this._zoomAnim) {
+                        this._zoomAnim = { target: this.zoom, mx, my };
+                    } else {
+                        this._zoomAnim.mx = mx;
+                        this._zoomAnim.my = my;
+                    }
+                    const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+                    this._zoomAnim.target = Math.min(4, Math.max(0.08, this._zoomAnim.target * f));
+                    if (!this._zoomRaf) this._tickZoomAnim();
+                }
+            },
+
+            _tickZoomAnim() {
+                const a = this._zoomAnim;
+                if (!a) { this._zoomRaf = null; return; }
+                const dz = a.target - this.zoom;
+                if (Math.abs(dz) < 0.0005) {
+                    const nz  = a.target;
+                    this.panX = a.mx - (a.mx - this.panX) * (nz / this.zoom);
+                    this.panY = a.my - (a.my - this.panY) * (nz / this.zoom);
+                    this.zoom = nz;
+                    this._zoomAnim = null;
+                    this._zoomRaf  = null;
+                    this._drawEdges();
+                    return;
+                }
+                const nz  = this.zoom + dz * 0.14;
+                this.panX = a.mx - (a.mx - this.panX) * (nz / this.zoom);
+                this.panY = a.my - (a.my - this.panY) * (nz / this.zoom);
+                this.zoom = nz;
                 this._drawEdges();
+                this._zoomRaf = requestAnimationFrame(() => this._tickZoomAnim());
+            },
+
+            // ── Pan: direct delta apply + velocity tracking.
+            //         Inertia only kicks in when events stop AND velocity is still
+            //         high — macOS sends its own decelerating momentum events so by
+            //         the time they stop, _wheelPanVx/Vy are near zero → skipped.
+            _wheelPan(e) {
+                cancelAnimationFrame(this._wheelPanRaf);
+                clearTimeout(this._wheelPanTimer);
+                const dx  = e.deltaMode === 1 ? e.deltaX * 16 : e.deltaX;
+                const dy  = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+                const now = Date.now();
+                const dt  = now - (this._wheelPanLastT || now);
+                if (dt > 0 && dt < 80) {
+                    this._wheelPanVx = (-dx / dt) * 14;
+                    this._wheelPanVy = (-dy / dt) * 14;
+                }
+                this._wheelPanLastT = now;
+                this.panX -= dx;
+                this.panY -= dy;
+                this._drawEdges();
+                this._wheelPanTimer = setTimeout(() => {
+                    if (Math.hypot(this._wheelPanVx || 0, this._wheelPanVy || 0) < 1.5) return;
+                    const step = () => {
+                        this._wheelPanVx *= 0.88;
+                        this._wheelPanVy *= 0.88;
+                        if (Math.abs(this._wheelPanVx) < 0.2 && Math.abs(this._wheelPanVy) < 0.2) return;
+                        this.panX += this._wheelPanVx;
+                        this.panY += this._wheelPanVy;
+                        if (this.edges.length) this._drawEdges();
+                        this._wheelPanRaf = requestAnimationFrame(step);
+                    };
+                    this._wheelPanRaf = requestAnimationFrame(step);
+                }, 60);
             },
 
             zoomStep(factor) {
