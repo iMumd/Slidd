@@ -103,4 +103,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::fallback(fn() => abort(404));
+
 require __DIR__.'/auth.php';

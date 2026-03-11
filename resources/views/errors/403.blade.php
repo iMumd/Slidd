@@ -16,7 +16,7 @@
         <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">403</p>
         <h1 class="text-2xl font-bold text-zinc-900 mb-3">Access denied</h1>
         <p class="text-sm text-zinc-500 leading-relaxed mb-8">
-            You don't have permission to view this page.<br>Sign in with the right account or go back home.
+            You don't have permission to view this page.<br>Go back home or check your account.
         </p>
 
         <div class="flex items-center justify-center gap-3">
@@ -24,11 +24,15 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 Go home
             </a>
-            @guest
+            @auth
+            <a href="{{ url('/dashboard') }}" class="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 bg-zinc-100 px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors duration-150">
+                Dashboard
+            </a>
+            @else
             <a href="{{ route('login') }}" class="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 bg-zinc-100 px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors duration-150">
                 Sign in
             </a>
-            @endguest
+            @endauth
         </div>
 
     </div>
