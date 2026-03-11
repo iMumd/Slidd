@@ -2025,7 +2025,11 @@
                 const c1 = { x:p1.x, y:p1.y }, c2 = { x:p2.x, y:p2.y };
                 ({ top:()=>c1.y-=d, right:()=>c1.x+=d, bottom:()=>c1.y+=d, left:()=>c1.x-=d }[a1] ?? (()=>{}))();
                 if (a2) ({ top:()=>c2.y-=d, right:()=>c2.x+=d, bottom:()=>c2.y+=d, left:()=>c2.x-=d }[a2] ?? (()=>{}))();
-                else c2.x -= d;
+                else {
+                    const vx = p2.x - c1.x, vy = p2.y - c1.y, vl = Math.sqrt(vx*vx+vy*vy)||1;
+                    c2.x = p2.x - (vx/vl)*Math.min(d, vl*0.5);
+                    c2.y = p2.y - (vy/vl)*Math.min(d, vl*0.5);
+                }
                 return `M ${p1.x} ${p1.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${p2.x} ${p2.y}`;
             },
 
