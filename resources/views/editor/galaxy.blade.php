@@ -111,7 +111,6 @@
         .text-editable ol, .note-editable ol { list-style-type: decimal; list-style-position: outside; padding-left: 1.25rem; margin-bottom: 0.4rem; }
         .text-editable li, .note-editable li { margin-bottom: 0.15rem; min-height: 1em; }
 
-        /* ── Code node ─────────────────────────────────────────── */
         .code-node { background: #1e1e2e; border: 1px solid rgba(255,255,255,.08); }
         .code-node .g-node-header { background: rgba(0,0,0,.3); border-bottom: 1px solid rgba(255,255,255,.06); }
         .code-node .g-node-body { background: transparent; }
@@ -136,10 +135,9 @@
         .note-editable { user-select: text; }
         .note-editable:empty::before { content: 'Add a note…'; color: rgba(0,0,0,.3); pointer-events: none; }
 
-        /* ── Image node ─────────────────────────────────────────── */
-        .image-node { background: #0d0e14; border: 1px solid rgba(255,255,255,.1); overflow: hidden; }
-        .image-node .g-node-header { background: rgba(0,0,0,.45); border-bottom: 1px solid rgba(255,255,255,.06); }
-        .image-node .g-node-body { overflow: hidden; position: relative; display: flex; }
+        .image-node { background: #0d0e14; border: 1px solid rgba(255,255,255,.1); }
+        .image-node .g-node-header { background: rgba(0,0,0,.45); border-bottom: 1px solid rgba(255,255,255,.06); border-radius: 0; }
+        .image-node .g-node-body { overflow: hidden; position: relative; display: flex; border-radius: 0 0 12px 12px; }
         .image-node img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; user-select: none; }
         .image-upload-zone {
             position: absolute; inset: 0;
@@ -188,7 +186,6 @@
         .g-node.selected .g-resize { opacity: 1; }
         .g-resize:hover { opacity: 1 !important; }
 
-        /* Larger touch targets on touch devices */
         @media (pointer: coarse) {
             .g-anchor { width: 20px; height: 20px; border-width: 3px; }
             .g-anchor.top    { top: -10px; }
@@ -385,14 +382,12 @@
                 <span class="hidden sm:inline">Delete</span>
             </button>
 
-            {{-- Shortcuts --}}
             <button @click="showGToolbar = false; isShortcutsOpen = true"
                     class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-slate-700 hover:bg-gray-100 px-2 sm:px-2.5 py-1.5 rounded-lg transition-colors">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
                 <span class="hidden sm:inline">Shortcuts</span>
             </button>
 
-            {{-- Save --}}
             <button @click="saveGalaxy()"
                     :disabled="isSaving"
                     class="flex items-center gap-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors">
@@ -400,7 +395,6 @@
                 <span class="hidden sm:inline" x-text="isSaving ? 'Saving…' : 'Save'"></span>
             </button>
 
-            {{-- Share --}}
             <div class="relative" x-data="{ gShareOpen: false, gLinkCopied: false }" @click.away="gShareOpen = false">
                 <button @click="gShareOpen = !gShareOpen"
                         :class="gShareOpen ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:text-slate-900 hover:bg-gray-100'"
@@ -473,7 +467,6 @@
                 </div>
             </div>
 
-            {{-- Export .slidd --}}
             <button @click="exportSlidd()"
                     class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-slate-700 hover:bg-gray-100 px-2 sm:px-2.5 py-1.5 rounded-lg transition-colors">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
@@ -555,7 +548,6 @@
              x-ref="canvas"
              :style="`transform: translate(${panX}px,${panY}px) scale(${zoom})`">
 
-            {{-- Nodes --}}
             <template x-for="node in nodes" :key="node.id">
                 <div class="g-node"
                      :class="[node.type + '-node', { selected: selectedNodeId === node.id, 'link-source': _linkSource === node.id }]"
@@ -730,8 +722,8 @@
     </div>
 
     <div x-show="showGToolbar"
-         :style="`top:${gToolbarY}px; left:${gToolbarX}px`"
-         class="fixed z-[500] -translate-x-1/2 -translate-y-full pb-2 pointer-events-auto"
+         :style="`top:${gToolbarY}px; left:${gToolbarX}px; max-width:calc(100vw - 16px); transform:translateX(-50%) ${gToolbarFlipped ? 'translateY(0.375rem)' : 'translateY(-100%) translateY(-0.5rem)'}`"
+         class="fixed z-[500] pointer-events-auto"
          style="display:none;"
          @mousedown.stop>
         <div class="flex items-center gap-0.5 p-1.5 rounded-xl border border-white/10 shadow-2xl flex-wrap"
@@ -912,6 +904,15 @@
                     onmouseenter="this.style.background='rgba(255,255,255,.08)';this.style.color='#fff'" onmouseleave="this.style.background='transparent';this.style.color='rgba(255,255,255,.55)'">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 113.356 1.076 1.125 1.125 0 01-1.256 1.176h-.054m0 0H3.99m-.356 1.234.034-.072a.518.518 0 01.018-.042m0 0H5.34"/></svg>
             </button>
+
+            <div style="width:1px;height:16px;background:rgba(255,255,255,.1);margin:0 2px;flex-shrink:0;"></div>
+
+            <button @mousedown.prevent="gSetDir('ltr')" title="Left to Right (LTR)"
+                    class="w-7 h-7 flex items-center justify-center rounded-md transition-colors text-[10px] font-bold tracking-tight select-none"
+                    :style="gCurrentDir === 'ltr' ? 'background:#6366f1;color:#fff' : 'color:rgba(255,255,255,.65)'">LTR</button>
+            <button @mousedown.prevent="gSetDir('rtl')" title="Right to Left (RTL)"
+                    class="w-7 h-7 flex items-center justify-center rounded-md transition-colors text-[10px] font-bold tracking-tight select-none"
+                    :style="gCurrentDir === 'rtl' ? 'background:#6366f1;color:#fff' : 'color:rgba(255,255,255,.65)'">RTL</button>
 
         </div>
     </div>
@@ -1169,7 +1170,6 @@
             _isMidPan     : false,
             _edgeDrag     : null,  // { edgeId, end:'from'|'to', curX, curY, snapNodeId, snapAnchor }
 
-            // ── Touch state ──────────────────────────────────────
             _touchDistBase : 0,
             _touchZoomBase : 1,
             _touchMidBase  : null,
@@ -1191,6 +1191,7 @@
             showGToolbar    : false,
             gToolbarX       : 0,
             gToolbarY       : 0,
+            gToolbarFlipped : false,
             gFontMenuOpen   : false,
             gSizeMenuOpen   : false,
             gColorMenuOpen  : false,
@@ -1198,11 +1199,11 @@
             gCurrentFont    : 'Arial',
             gCurrentSize    : '14px',
             gCurrentColor   : '#ffffff',
+            gCurrentDir     : 'ltr',
             _gPreviewOk     : false,
 
             _noteColors: ['#fef9c3','#fce7f3','#dcfce7','#dbeafe','#ede9fe','#ffedd5'],
 
-            // ─────────────────────────────────────────────────────
             init() {
                 this.$nextTick(() => {
                     const vp = this.$refs.viewport;
@@ -1353,7 +1354,6 @@
                 if (n) n.z = this._topZ() + 1;
             },
 
-            // ── Code highlighting ──────────────────────────────────
             highlightNode(node) {
                 if (node.type === 'code' && node.content?.trim()) {
                     const r = hljs.highlightAuto(node.content);
@@ -1372,7 +1372,6 @@
                 const HEADER_H = 36;
                 node.h = Math.max(80, ta.scrollHeight + HEADER_H);
 
-                // Width: measure the longest line with a hidden ruler element
                 const ruler = document.getElementById('_code-ruler');
                 if (ruler && ta.value) {
                     const lines = ta.value.split('\n');
@@ -1385,7 +1384,6 @@
             },
 
             checkGSelection() {
-                // Always hide the toolbar while any modal is open
                 if (this.isShortcutsOpen || this.showExitModal) { this.showGToolbar = false; return; }
                 const sel = window.getSelection();
                 if (!sel || sel.toString().trim().length === 0) { this.showGToolbar = false; return; }
@@ -1394,9 +1392,21 @@
                 if (!el || !el.closest('.text-editable, .note-editable')) { this.showGToolbar = false; return; }
                 const rect = sel.getRangeAt(0).getBoundingClientRect();
                 if (!rect || rect.width === 0) { this.showGToolbar = false; return; }
-                this.gToolbarX    = rect.left + rect.width / 2;
-                this.gToolbarY    = rect.top;
+                this.gToolbarX = rect.left + rect.width / 2;
+                const flipped = rect.top < 56;
+                this.gToolbarFlipped = flipped;
+                this.gToolbarY    = flipped ? rect.bottom : rect.top;
                 this.showGToolbar = true;
+                // detect current paragraph direction
+                let node = sel.getRangeAt(0).commonAncestorContainer;
+                if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+                const ce = node?.closest('.text-editable, .note-editable');
+                if (ce) {
+                    let para = node;
+                    while (para && para.parentElement !== ce) para = para.parentElement;
+                    const target = (para && para !== ce) ? para : ce;
+                    this.gCurrentDir = target.getAttribute('dir') || 'ltr';
+                }
             },
 
             gFmt(cmd, val) { document.execCommand(cmd, false, val ?? null); },
@@ -1436,13 +1446,27 @@
                 this.gHlMenuOpen = false;
             },
 
+            gSetDir(dir) {
+                const sel = window.getSelection();
+                if (!sel || !sel.rangeCount) return;
+                let node = sel.getRangeAt(0).commonAncestorContainer;
+                if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+                const ce = node?.closest('[contenteditable]');
+                if (!ce) return;
+                let para = node;
+                while (para && para.parentElement !== ce) para = para.parentElement;
+                const target = (para && para !== ce) ? para : ce;
+                target.setAttribute('dir', dir);
+                this.gCurrentDir = dir;
+                ce.dispatchEvent(new Event('input', { bubbles: true }));
+            },
+
             cycleColor(node) {
                 const i = this._noteColors.indexOf(node.color);
                 node.color = this._noteColors[(i + 1) % this._noteColors.length];
             },
 
             darken(hex) {
-                // Return a slightly darker version for the header
                 const c = parseInt(hex.replace('#',''), 16);
                 const r = Math.max(0,(c>>16&255)-15);
                 const g = Math.max(0,(c>>8&255)-15);
@@ -1450,7 +1474,6 @@
                 return `rgb(${r},${g},${b})`;
             },
 
-            // ── Drag ──────────────────────────────────────────────
             startDrag(id, e) {
                 e.stopPropagation();
                 const vp   = this.$refs.viewport;
@@ -1462,7 +1485,6 @@
                 this.selectNode(id);
             },
 
-            // ── Resize ────────────────────────────────────────────
             startResize(id, e) {
                 e.stopPropagation();
                 const node = this.nodes.find(n => n.id === id);
@@ -1511,7 +1533,6 @@
                 const my   = e.clientY - rect.top;
 
                 if (e.deltaMode === 0) {
-                    // Trackpad pinch — continuous, proportional to gesture speed
                     const factor  = Math.exp(-e.deltaY * 0.005);
                     const newZoom = Math.min(4, Math.max(0.08, this.zoom * factor));
                     this.panX = mx - (mx - this.panX) * (newZoom / this.zoom);
@@ -1519,7 +1540,6 @@
                     this.zoom = newZoom;
                     this._drawEdges();
                 } else {
-                    // Mouse wheel — smooth animated ease-out to accumulated target
                     if (!this._zoomAnim) {
                         this._zoomAnim = { target: this.zoom, mx, my };
                     } else {
@@ -1662,7 +1682,6 @@
                 }
             },
 
-            // ── Touch support ─────────────────────────────────────
             onViewportTouchstart(e) {
                 if (this.isShortcutsOpen || this.showExitModal) return;
                 cancelAnimationFrame(this._inertiaRaf);
@@ -1727,7 +1746,6 @@
                     const now = Date.now();
 
                     if (this._pan) {
-                        // ── Canvas pan with velocity tracking for inertia ──
                         const newPanX = this._pan.spx + (t.clientX - this._pan.sx);
                         const newPanY = this._pan.spy + (t.clientY - this._pan.sy);
                         const dt = now - this._touchLastTime;
@@ -1741,7 +1759,6 @@
                         if (this.edges.length) this._drawEdges();
 
                     } else if (this._drag) {
-                        // ── Node drag ──
                         const node = this.nodes.find(n => n.id === this._drag.nodeId);
                         if (node) {
                             node.x = (t.clientX - rect.left - this.panX) / this.zoom - this._drag.ox;
@@ -1750,7 +1767,6 @@
                         }
 
                     } else if (this._resize) {
-                        // ── Node resize ──
                         const node = this.nodes.find(n => n.id === this._resize.nodeId);
                         if (node) {
                             node.w = Math.max(160, this._resize.sw + (t.clientX - this._resize.sx) / this.zoom);
@@ -1876,7 +1892,6 @@
                 this._isMidPan = false;
             },
 
-            // ── Anchor-drag edge drawing ──────────────────────────
             startEdge(fromId, fromAnchor, e) {
                 e.stopPropagation();
                 const rect = this.$refs.viewport?.getBoundingClientRect();
@@ -2037,7 +2052,6 @@
                 return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
             },
 
-            // ── Save ──────────────────────────────────────────────
             async saveGalaxy() {
                 if (this.isSaving) return false;
                 this.isSaving = true;
@@ -2176,7 +2190,6 @@
                 }
             },
 
-            // ── Blur active editable ───────────────────────────────
             _blurActive() {
                 const el = document.activeElement;
                 if (!el) return;
@@ -2186,7 +2199,6 @@
                 }
             },
 
-            // ── Toast ─────────────────────────────────────────────
             toast(msg) {
                 clearTimeout(this._timer);
                 this.toastMsg  = msg;

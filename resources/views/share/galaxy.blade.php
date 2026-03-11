@@ -725,7 +725,7 @@
             },
 
             onWheel(e) {
-                e.ctrlKey ? this._wheelZoom(e) : this._wheelPan(e);
+                this._wheelZoom(e);
             },
 
             _wheelZoom(e) {
@@ -811,7 +811,6 @@
                 const rect = vp.getBoundingClientRect();
                 if (e.clientX < rect.left || e.clientX > rect.right ||
                     e.clientY < rect.top  || e.clientY > rect.bottom) return;
-                // Don't pan when clicking inside selectable content areas
                 if (e.target.closest('.gv-text-body, .gv-note-body, .gv-code-body, .gv-image-body')) return;
                 this._isPanning = true;
                 this._pan = { sx: e.clientX, sy: e.clientY, spx: this.panX, spy: this.panY };
@@ -837,7 +836,6 @@
                 return `rgb(${r},${g},${b})`;
             },
 
-            // ── Visitor actions ───────────────────────────────────
             _showToast(msg) {
                 clearTimeout(this._toastTimer);
                 this._toast = msg;
